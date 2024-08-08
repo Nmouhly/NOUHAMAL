@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\News;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Validator;
 class NewsController extends Controller
 {
     public function index()
@@ -47,26 +46,40 @@ class NewsController extends Controller
 
     public function update(Request $request, $id)
     {
-        Log::info('Entrée dans la méthode update avec id: ' . $id);
-
-        try {
-            $news = News::findOrFail($id);
-            Log::info('Actualité trouvée: ', ['news' => $news]);
-            $news->title = $request->input('title');
-            $news->content = $request->input('content');
-
-            if ($request->hasFile('image')) {
-                $news->image = $request->file('image')->store('images', 'public');
-            }
-
-            $news->save();
-            Log::info('Actualité mise à jour: ', ['news' => $news]);
-            return response()->json($news, 200);
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la mise à jour de l\'actualité: ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de la mise à jour de l\'actualité'], 500);
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
+    
+        $news = News::find($id);
+        if (!$news) {
+            return response()->json(['error' => 'Actualité non trouvée'], 404);
+        }
+    
+        $news->title = $request->input('title');
+        $news->content = $request->input('content');
+    
+        if ($request->hasFile('image')) {
+            // Supprimer l'image précédente si elle existe
+            if ($news->image) {
+                Storage::delete('public/news_images/' . $news->image);
+            }
+    
+            // Sauvegarder la nouvelle image
+            $imagePath = $request->file('image')->store('news_images', 'public');
+            $news->image = basename($imagePath);
+        }
+    
+        $news->save();
+    
+        return response()->json($news, 200);
     }
+
 
     public function show($id)
     {

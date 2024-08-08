@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Hash;
-use App\User;
+use App\User; // Utilisez App\Models\User au lieu de App\User si vous utilisez Laravel 8+
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\AuthUserRequest;
@@ -34,15 +34,23 @@ class UserController extends Controller
     {
         if ($request->validated()) {
             $user = User::whereEmail($request->email)->first();
+
             if (!$user || !Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'error' => 'These credentials do not match any of our records.'
-                ], 401); // Ajouter un code de statut approprié pour une réponse non autorisée
+                ], 401); // Code de statut approprié pour une réponse non autorisée
             } else {
-                return response()->json([
-                    'user' => $user,
-                    'currentToken' => $user->createToken('new_user')->plainTextToken
-                ]);
+                // Vérifiez le rôle de l'utilisateur
+                if ($user->role == 1) { // Supposons que '1' représente un administrateur
+                    return response()->json([
+                        'user' => $user,
+                        'currentToken' => $user->createToken('new_user')->plainTextToken
+                    ]);
+                } else {
+                    return response()->json([
+                        'error' => 'Access denied. Not an admin.'
+                    ], 403); // Code de statut pour l'accès interdit
+                }
             }
         }
     }
@@ -54,6 +62,7 @@ class UserController extends Controller
             'message' => 'Logout has been created successfully.'
         ]);
     }
+
     public function checkingAuthenticated(Request $request)
     {
         // Vérifie si l'utilisateur est authentifié
@@ -64,4 +73,63 @@ class UserController extends Controller
         ]);
     }
 
+    // CRUD Functions
+    public function index()
+    {
+        $users = User::all();
+        return response()->json($users);
+    }
+
+    public function show($id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            return response()->json($user);
+        } else {
+            return response()->json([
+                'error' => 'User not found.'
+            ], 404);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255|unique:users,email,' . $id,
+                'password' => 'sometimes|string|min:8|confirmed',
+                'role' => 'sometimes|integer'
+            ]);
+
+            if (isset($validatedData['password'])) {
+                $validatedData['password'] = Hash::make($validatedData['password']);
+            }
+
+            $user->update($validatedData);
+            return response()->json([
+                'message' => 'User updated successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'error' => 'User not found.'
+            ], 404);
+        }
+    }
+
+    public function destroy($id)
+    {
+        $user = User::find($id);
+        if ($user) {
+            $user->delete();
+            return response()->json([
+                'message' => 'User deleted successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'error' => 'User not found.'
+            ], 404);
+        }
+    }
 }

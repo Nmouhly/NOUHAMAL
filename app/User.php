@@ -20,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Ajouté pour le champ role
     ];
 
     /**
@@ -39,5 +40,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'role' => 'integer', // Ajouté pour caster role en entier
     ];
 }
