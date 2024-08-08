@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use App\User; // Utilisez App\Models\User au lieu de App\User si vous utilisez Laravel 8+
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreUserRequest;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\AuthUserRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,6 +20,7 @@ class UserController extends Controller
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
+                
             ]);
             return response()->json([
                 'message' => 'Account has been created successfully.'
@@ -94,28 +96,31 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = User::find($id);
-        if ($user) {
-            $validatedData = $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|email|max:255|unique:users,email,' . $id,
-                'password' => 'sometimes|string|min:8|confirmed',
-                'role' => 'sometimes|integer'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
+            'password' => 'sometimes|required|string|min:8',
+            'role' => 'sometimes|required|integer|in:0,1'
+        ]);
 
-            if (isset($validatedData['password'])) {
-                $validatedData['password'] = Hash::make($validatedData['password']);
-            }
-
-            $user->update($validatedData);
-            return response()->json([
-                'message' => 'User updated successfully.'
-            ]);
-        } else {
-            return response()->json([
-                'error' => 'User not found.'
-            ], 404);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+        }
+
+        $user->update([
+            'name' => $request->input('name', $user->name),
+            'email' => $request->input('email', $user->email),
+            'password' => $request->has('password') ? Hash::make($request->password) : $user->password,
+            'role' => $request->input('role', $user->role)
+        ]);
+
+        return response()->json($user);
     }
 
     public function destroy($id)
