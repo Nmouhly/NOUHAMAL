@@ -6,8 +6,14 @@ use Illuminate\Http\Request;
 use App\News;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 class NewsController extends Controller
 {
+    
+    
     public function index()
     {
         try {
@@ -43,43 +49,96 @@ class NewsController extends Controller
             'news' => $news
         ]);
     }
-
     public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+    {  $paths=$request->all();
+        return view('news.test', compact('paths'));
+        //  $news = News::findOrFail($id);
+    //     $news->title=$request->title;
+    //     $news->content=$request->content;
+    //     $image = $request->file('file');
+    //     $image_name = time() . '_' . $image->getClientOriginalName();
+    //     $image->storeAs('news_images/', $image_name,'public');
+    //     $paths=$image_name;
+    //     $news->image=$paths;
+    //     $news->save();
+    //     return "http://localhost/l2is_backend/storage/app/public/news_images/" . $paths;
     
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-    
-        $news = News::find($id);
-        if (!$news) {
-            return response()->json(['error' => 'Actualité non trouvée'], 404);
-        }
-    
-        $news->title = $request->input('title');
-        $news->content = $request->input('content');
-    
-        if ($request->hasFile('image')) {
-            // Supprimer l'image précédente si elle existe
-            if ($news->image) {
-                Storage::delete('public/news_images/' . $news->image);
-            }
-    
-            // Sauvegarder la nouvelle image
-            $imagePath = $request->file('image')->store('news_images', 'public');
-            $news->image = basename($imagePath);
-        }
-    
-        $news->save();
-    
-        return response()->json($news, 200);
-    }
+}
 
+//     public function update(Request $request, $id)
+// {
+
+//     //  $news = $request->all();
+// //    return view('news.test', compact('news'));
+    
+//     // Trouver l'actualité à mettre à jour
+//     $news = News::findOrFail($id);
+//     Log::info('Actualité trouvée:', ['news_id' => $id, 'news' => $news]);
+
+//     // Validation des champs
+//    /* $validator = Validator::make($request->all(), [
+//         'title' => 'string|max:255',
+//         'content' => 'string',
+//         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+//     ]);
+
+//     if ($validator->fails()) {
+//         Log::error('Validation échouée:', ['errors' => $validator->errors()]);
+//         return response()->json(['error' => 'Validation échouée', 'errors' => $validator->errors()], 422);
+//     }
+
+//     Log::info('Validation des champs réussie');
+//     // Mise à jour des autres champs
+//     */
+//     $news->title = $request->title;
+//     $news->content = $request->content;
+    
+//     Log::info('Champs mis à jour:', ['title' => $news->title, 'content' => $news->content]);
+
+//     // Traitement de l'image
+//     if ($request->hasFile('image')) {
+//         Log::info('Fichier image détecté');
+//         $file = $request->file('image');
+
+//         // Vérification du type MIME
+//         $mimeType = $file->getMimeType();
+//         $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+
+//         if (!in_array($mimeType, $allowedMimeTypes)) {
+//             Log::error('Type MIME non autorisé:', ['mimeType' => $mimeType]);
+//             return response()->json(['error' => 'Le fichier doit être une image'], 400);
+//         }
+
+//         try {
+//             $path = $file->store('news_images', 'public');
+//             Log::info('Image téléchargée avec succès:', ['path' => $path]);
+//             $news->image = $path;
+//         } catch (\Exception $e) {
+//             Log::error('Erreur lors du téléchargement de l\'image:', ['exception' => $e->getMessage()]);
+//             return response()->json(['error' => 'Erreur lors du téléchargement de l\'image'], 500);
+//         }
+//     } else {
+//         Log::info('Pas de fichier image détecté');
+//     }
+    
+   
+    
+//     // Sauvegarder les changements
+//     try {
+         
+//         $news->save();
+//         Log::info('Actualité sauvegardée avec succès:', ['news' => $news]);
+//         return "http://localhost/l2is_backend/storage/app/public/news_images/" . $news->image;
+//     } catch (\Exception $e) {
+//         Log::error('Erreur lors de la sauvegarde de l\'actualité:', ['exception' => $e->getMessage()]);
+//         return response()->json(['error' => 'Erreur lors de la sauvegarde'], 500);
+//     }
+
+//     return response()->json([
+//         'message' => 'Actualité mise à jour avec succès',
+//         'news' => $news,
+//     ]);
+// }
 
     public function show($id)
     {
@@ -103,6 +162,5 @@ class NewsController extends Controller
         }
 
         $news->delete();
-        return response()->json(null, 204);
-    }
+        return response()->json(null, 204);}
 }

@@ -12,24 +12,36 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function store(StoreUserRequest $request)
+    public function store(Request $request)
     {
-        try {
-            $validatedData = $request->validated();
-            User::create([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'password' => Hash::make($validatedData['password']),
-                
-            ]);
+        // Validation des données de la requête
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
+        ]);
+
+        // Retourner une réponse en cas d'erreurs de validation
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Account has been created successfully.'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Failed to create account. Please try again later.'
-            ], 500);
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        // Création de l'utilisateur
+        $user = User::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => Hash::make($request->input('password')), // Hachage du mot de passe
+            'role' => (int) $request->input('role'), // Conversion en entier
+        ]);
+
+        // Retourner une réponse de succès
+        return response()->json([
+            'message' => 'Utilisateur créé avec succès.',
+            'user' => $user,
+        ], 201);
     }
 
     public function auth(AuthUserRequest $request)
