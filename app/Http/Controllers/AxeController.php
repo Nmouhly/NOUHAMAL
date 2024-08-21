@@ -1,33 +1,38 @@
 <?php
-
 namespace App\Http\Controllers;
 use App\Axe;
 use Illuminate\Http\Request;
 
 class AxeController extends Controller
 {
-    // Affiche la liste des axes
+    // Affiche la liste des axes, avec possibilité de filtrage par team_id
+    public function index(Request $request)
+    {
+        $teamId = $request->query('team_id');
+        
+        // Filtrer par team_id si fourni
+        if ($teamId) {
+            $axes = Axe::where('team_id', $teamId)->get();
+        } else {
+            $axes = Axe::all();
+        }
 
-    // Affiche le formulaire de création d'un nouvel axe
+        return response()->json($axes);
+    }
 
     // Stocke un nouvel axe dans la base de données
     public function store(Request $request)
     {
-        // Valider les données de la requête
-        $validatedData = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'team_id' => 'nullable|integer|exists:teams,id', // Validation pour team_id
         ]);
 
-        // Créer un nouvel axe avec les données validées
-        $axe = Axe::create([
-            'title' => $validatedData['title'],
-            'content' => $validatedData['content'],
-        ]);
-
-        // Retourner une réponse appropriée
-        return response()->json(['message' => 'Axe créé avec succès', 'axe' => $axe], 201);
+        $axe = Axe::create($request->all());
+        return response()->json($axe, 201);
     }
+
     // Affiche un axe spécifique
     public function show($id)
     {
@@ -40,40 +45,24 @@ class AxeController extends Controller
         return response()->json($axe);
     }
 
-    // Affiche le formulaire d'éditsssssion pour un axe spécifique
-    public function index()
-    {
-        // Fetch all axes from the database
-        $axes = Axe::all();
-
-        // Return the axes as a JSON response
-        return response()->json($axes);
-    }
-
     // Met à jour un axe spécifique dans la base de données
     public function update(Request $request, $id)
     {
-        // Validation mise à jour pour inclure les attributs nécessaires
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'nullable|string', // 'content' est maintenant optionnel
-            // Ajoutez ici d'autres validations si nécessaire
+            'team_id' => 'nullable|integer|exists:teams,id', // Validation pour team_id
         ]);
 
-        // Trouver l'axe par ID ou renvoyer une erreur 404 s'il n'existe pas
         $axe = Axe::findOrFail($id);
-
-        // Mettre à jour l'axe avec les données fournies
         $axe->update($request->only([
             'title',
             'content',
-            // Inclure d'autres champs à mettre à jour si nécessaire
+            'team_id', // Inclure team_id pour la mise à jour
         ]));
 
-        // Retourner la réponse JSON avec les informations de l'axe mis à jour
         return response()->json($axe);
     }
-
 
     // Supprime un axe spécifique de la base de données
     public function destroy($id)

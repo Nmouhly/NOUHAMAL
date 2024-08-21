@@ -6,25 +6,38 @@ use Illuminate\Http\Request;
 
 class PresentationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $presentations = Presentation::all();
+        $teamId = $request->query('team_id');
+    
+        // Filtre par team_id si fourni
+        if ($teamId) {
+            $presentations = Presentation::where('team_id', $teamId)->get();
+        } else {
+            $presentations = Presentation::all();
+        }
+    
         return response()->json($presentations);
     }
+    
 
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'team_id' => 'nullable|integer|exists:teams,id', // Validation pour team_id
         ]);
 
-        return Presentation::create($request->all());
+        $presentation = Presentation::create($request->all());
+
+        return response()->json($presentation, 201);
     }
 
     public function show($id)
     {
-        return Presentation::findOrFail($id);
+        $presentation = Presentation::findOrFail($id);
+        return response()->json($presentation);
     }
 
     public function update(Request $request, $id)
@@ -32,12 +45,13 @@ class PresentationController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'team_id' => 'nullable|integer|exists:teams,id', // Validation pour team_id
         ]);
 
         $presentation = Presentation::findOrFail($id);
         $presentation->update($request->all());
 
-        return $presentation;
+        return response()->json($presentation);
     }
 
     public function destroy($id)

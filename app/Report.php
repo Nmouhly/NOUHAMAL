@@ -4,12 +4,12 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Actualité extends Model
+class Report extends Model
 {
-
     protected $fillable = [
         'title',
-        'content',
-        'image', // Ajouter le champ image
+        'author',
+        'summary',
+        'pdf_link',
     ];
 }

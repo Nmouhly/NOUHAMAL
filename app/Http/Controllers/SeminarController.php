@@ -22,7 +22,7 @@ class SeminarController extends Controller
             'description' => 'required|string|max:1000',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+           'end_time' => 'required|date_format:H:i',
             'location' => 'required|string|max:255',
             'speaker' => 'required|string|max:255',
             'status' => 'nullable|string|max:255',
@@ -61,7 +61,7 @@ class SeminarController extends Controller
             'description' => 'nullable|string',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+           //'end_time' => 'required|date_format:H:i',
             'location' => 'required|string|max:255',
             'speaker' => 'required|string|max:255',
             'status' => 'nullable|string|max:255', // Validation pour le champ 'status' avec les valeurs autorisées
@@ -72,8 +72,8 @@ class SeminarController extends Controller
             'title',
             'description',
             'date',
-            'start_time',
-            'end_time',
+           'start_time',
+           'end_time',
             'location',
             'speaker',
             'status' // Inclure 'status' lors de la mise à jour

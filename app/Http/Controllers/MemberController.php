@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Member;
@@ -8,31 +7,39 @@ use Illuminate\Support\Facades\Log;
 
 class MemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $members = Member::all();
+        $teamId = $request->query('team_id');
+
+        // Filter by team_id if provided
+        if ($teamId) {
+            $members = Member::where('team_id', $teamId)->get();
+        } else {
+            $members = Member::all();
+        }
+
         return response()->json($members);
     }
 
     public function store(Request $request)
     {
-        // Validation mise à jour pour inclure 'statut'
         $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
             'contact_info' => 'required|string|max:255',
-            'team_id' => 'required|integer|exists:teams,id',
-            'statut' => 'nullable|string|max:255', // Validation pour le nouvel attribut
+            'team_id' => 'nullable|integer|exists:teams,id', // Updated to make team_id nullable
+            'statut' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
         ]);
 
         try {
-            // Inclure 'statut' lors de la création du membre
             $member = Member::create([
                 'name' => $request->input('name'),
                 'position' => $request->input('position'),
                 'contact_info' => $request->input('contact_info'),
                 'team_id' => $request->input('team_id'),
-                'statut' => $request->input('statut'), // Ajout de 'statut'
+                'statut' => $request->input('statut'),
+                'bio' => $request->input('bio'),
             ]);
 
             return response()->json($member, 201);
@@ -50,13 +57,13 @@ class MemberController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Validation mise à jour pour inclure 'statut'
         $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
             'contact_info' => 'required|string|max:255',
-            'bio' => 'nullable|string', // 'bio' est maintenant optionnel
-            'statut' => 'nullable|string|max:255', // Validation pour le nouvel attribut
+            'bio' => 'nullable|string',
+            'team_id' => 'nullable|integer|exists:teams,id', // Validation for team_id during update
+            'statut' => 'nullable|string|max:255',
         ]);
 
         $member = Member::findOrFail($id);
@@ -65,7 +72,8 @@ class MemberController extends Controller
             'position',
             'contact_info',
             'bio',
-            'statut' // Inclure 'statut' lors de la mise à jour
+            'team_id', // Include team_id during update
+            'statut'
         ]));
 
         return response()->json($member);
