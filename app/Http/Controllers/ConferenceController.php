@@ -59,53 +59,54 @@ class ConferenceController extends Controller
     }
     
 
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'authors' => 'required|string',
-        'paper_title' => 'required|string',
-        'conference_name' => 'required|string',
-        'date' => 'required|date',
-        'location' => 'required|string',
-        'reference' => 'nullable|string',
-        'image' => 'nullable|string', // Validation de l'image en base64
-    ]);
-
-    $conference = Conference::find($id);
-
-    if ($conference) {
-        $conference->title = $request->title;
-        $conference->authors = $request->authors;
-        $conference->paper_title = $request->paper_title;
-        $conference->conference_name = $request->conference_name;
-        $conference->date = $request->date;
-        $conference->location = $request->location;
-        $conference->reference = $request->reference;
-
-        if ($request->image) {
-            // Supprimer l'ancienne image si elle existe
-            if ($conference->image) {
-                Storage::disk('public')->delete($conference->image);
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'authors' => 'required|string',
+            'paper_title' => 'required|string',
+            'conference_name' => 'required|string',
+            'date' => 'required|date',
+            'location' => 'required|string',
+            'reference' => 'nullable|string',
+            'image' => 'nullable|string', // Validation de l'image en base64
+        ]);
+    
+        $conference = Conference::find($id);
+    
+        if ($conference) {
+            $conference->title = $request->title;
+            $conference->authors = $request->authors;
+            $conference->paper_title = $request->paper_title;
+            $conference->conference_name = $request->conference_name;
+            $conference->date = $request->date;
+            $conference->location = $request->location;
+            $conference->reference = $request->reference;
+    
+            if ($request->image) {
+                // Supprimer l'ancienne image si elle existe
+                if ($conference->image) {
+                    Storage::disk('public')->delete($conference->image);
+                }
+    
+                // Décoder l'image en base64 et la sauvegarder
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+                $imageName = uniqid() . '.png'; // Nommez l'image avec un nom unique
+                $imagePath = 'conference_images/' . $imageName;
+                Storage::disk('public')->put($imagePath, $imageData);
+    
+                // Mettre à jour le chemin de l'image
+                $conference->image = $imagePath;
             }
-
-            // Décoder l'image en base64 et la sauvegarder
-            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
-            $imageName = uniqid() . '.png';
-            $imagePath = 'conference_images/' . $imageName;
-            Storage::disk('public')->put($imagePath, $imageData);
-
-            // Mettre à jour le chemin de l'image
-            $conference->image = $imagePath;
+    
+            $conference->save();
+    
+            return response()->json($conference);
         }
-
-        $conference->save();
-
-        return response()->json($conference);
+    
+        return response()->json(['message' => 'Conférence non trouvée'], 404);
     }
-
-    return response()->json(['message' => 'Conférence non trouvée'], 404);
-}
+    
 
     
     // Supprimer une conférence

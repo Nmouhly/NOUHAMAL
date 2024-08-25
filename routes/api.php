@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\OuvrageController;
 use App\Http\Controllers\ReportController;
-
+use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\RevueController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TeamController;
@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Auth;
 //  Route::post('/test/{id}', [NewsController::class, 'update']);
 //Route::apiResource('seminars', SeminarController::class);
 // Route::put('/news/{id}', [NewsController::class, 'update']);
-
+Route::post('/ouvrages', [OuvrageController::class, 'store']);
+Route::put('/members/{id}', [MemberController::class, 'update']);
+Route::put('/news/{id}', [NewsController::class, 'update']);
 // Group routes that require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // User logout
@@ -31,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/news', [NewsController::class, 'store']);
    
     Route::get('/news/{id}', [NewsController::class, 'show']);
-    Route::put('/news/{id}', [NewsController::class, 'update']);
+    
     Route::put('/conferences/{id}', [ConferenceController::class, 'update']);
 
      Route::delete('/news/{id}', [NewsController::class, 'destroy']);
@@ -43,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Member CRUD except for read operations
     Route::post('/members', [MemberController::class, 'store']);
-    Route::put('/members/{id}', [MemberController::class, 'update']);
+    
     Route::delete('/members/{id}', [MemberController::class, 'destroy']);
     Route::get('/presentations', [PresentationController::class, 'index']);
     Route::post('/presentations', [PresentationController::class, 'store']);
@@ -57,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/seminars/{id}', [SeminarController::class, 'destroy']);
      Route::get('/ouvrages', [OuvrageController::class, 'index']);
     Route::get('/ouvrages/{id}', [OuvrageController::class, 'show']);
-    Route::post('/ouvrages', [OuvrageController::class, 'store']);
+  
     Route::put('/ouvrages/{id}', [OuvrageController::class, 'update']);
     Route::delete('/ouvrages/{id}', [OuvrageController::class, 'destroy']);
     Route::get('/reports', [ReportController::class, 'index']);
@@ -121,9 +123,11 @@ Route::post('/user/register', [UserController::class, 'store']);
 
 // Read operations for visitors
  Route::get('/news', [NewsController::class, 'index']);
+Route::get('/statistics', [StatisticsController::class,'index']);
  Route::get('/news/{id}', [NewsController::class, 'show']);
 Route::get('/members', [MemberController::class, 'index']);
 Route::get('/members/{id}', [MemberController::class, 'show']);
+Route::get('members/user/{userId}', [MemberController::class, 'getByUserId']);
 Route::get('/seminars', [SeminarController::class, 'index']);
 Route::get('/seminars/{id}', [SeminarController::class, 'show']);
 Route::get('/equipe', [TeamController::class, 'index']);

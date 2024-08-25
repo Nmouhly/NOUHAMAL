@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Hash;
-use App\User; // Utilisez App\Models\User au lieu de App\User si vous utilisez Laravel 8+
+use App\User;
+use App\Member; // Utilisez App\Models\User au lieu de App\User si vous utilisez Laravel 8+
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreUserRequest;
 use Illuminate\Support\Facades\Validator;
@@ -46,25 +47,31 @@ class UserController extends Controller
 
     public function auth(AuthUserRequest $request)
     {
+        // Validation des données de la requête
         if ($request->validated()) {
+            // Récupérer l'utilisateur par email
             $user = User::whereEmail($request->email)->first();
 
+            // Vérifier si l'utilisateur existe et si le mot de passe est correct
             if (!$user || !Hash::check($request->password, $user->password)) {
                 return response()->json([
-                    'error' => 'These credentials do not match any of our records.'
-                ], 401); // Code de statut approprié pour une réponse non autorisée
+                    'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
+                ], 401); // Code de statut 401 Unauthorized
+            }
+
+            // Vérifier le rôle de l'utilisateur
+            if ($user->role === 1) { // 1 représente un administrateur
+                return response()->json([
+                    'user' => $user,
+                    'currentToken' => $user->createToken('new_user')->plainTextToken
+                ]);
             } else {
-                // Vérifiez le rôle de l'utilisateur
-                if ($user->role == 1) { // Supposons que '1' représente un administrateur
-                    return response()->json([
-                        'user' => $user,
-                        'currentToken' => $user->createToken('new_user')->plainTextToken
-                    ]);
-                } else {
-                    return response()->json([
-                        'error' => 'Access denied. Not an admin.'
-                    ], 403); // Code de statut pour l'accès interdit
-                }
+                // Redirection ou réponse pour un utilisateur non administrateur
+                return response()->json([
+                    'user' => $user,
+                    'message' => 'Redirection vers la page utilisateur.',
+                    'redirectUrl' => url('/user/UserProfile') // URL de redirection pour l'utilisateur non administrateur
+                ]);
             }
         }
     }
@@ -136,17 +143,28 @@ class UserController extends Controller
     }
 
     public function destroy($id)
-    {
-        $user = User::find($id);
-        if ($user) {
-            $user->delete();
-            return response()->json([
-                'message' => 'User deleted successfully.'
-            ]);
-        } else {
-            return response()->json([
-                'error' => 'User not found.'
-            ], 404);
+{
+    $user = User::find($id);
+    if ($user) {
+        // Find the associated Member with the same email
+        $member = Member::where('email', $user->email)->first();
+
+        if ($member) {
+            // Update the Member's status to 'ancien'
+            $member->update(['statut' => 'ancien']);
         }
+
+        // Delete the user
+        $user->delete();
+
+        return response()->json([
+            'message' => 'User and associated member status updated successfully.'
+        ]);
+    } else {
+        return response()->json([
+            'error' => 'User not found.'
+        ], 404);
     }
+}
+
 }

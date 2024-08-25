@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Patent extends Model
 {
+    protected $table = 'patents';
     protected $fillable = [
         'title',
         'author',

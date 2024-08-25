@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Revue extends Model
 {
+    protected $table = 'revues';
     protected $fillable = [
         'title',
         'author',

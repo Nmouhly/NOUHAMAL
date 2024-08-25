@@ -27,16 +27,20 @@ class OuvrageController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'pdf_link' => 'nullable|url',
+            // 'id_user' => 'required|integer|exists:users,id', // Validation de l'id_user
         ]);
 
-        Ouvrage::create([
+        // Créer un nouvel ouvrage avec id_user
+        $ouvrage = Ouvrage::create([
             'title' => $request->title,
             'author' => $request->author,
             'pdf_link' => $request->pdf_link,
+            // 'id_user' => $request->id_user, // Ajouter id_user ici
         ]);
 
-        return response()->json(['message' => 'Ouvrage créé avec succès!'], 201);
+        return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
     }
+
 
     public function update(Request $request, $id)
     {
