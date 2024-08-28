@@ -10,12 +10,13 @@ class Ouvrage extends Model
     protected $fillable = [
         'title',
         'author',
-        'pdf_link',
-        //'id_user',
+        'DOI',
+        'id_user',
+       
     ];
-    // public function member()
-    // {
-    //     return $this->belongsTo(Member::class, 'id_user', 'user_id');
-    // }
+    public function member()
+    {
+        return $this->belongsTo(Member::class, 'id_user', 'user_id');
+    }
 }
 

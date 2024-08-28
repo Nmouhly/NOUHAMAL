@@ -141,6 +141,35 @@ class UserController extends Controller
 
         return response()->json($user);
     }
+    public function updateMember(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'position' => 'nullable|string|max:255',
+        'bio' => 'nullable|string',
+        'contact_info' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
+
+    $member = Member::find($id);
+
+    if (!$member) {
+        return response()->json(['error' => 'Membre non trouvé'], 404);
+    }
+
+    $member->position = $request->input('position');
+    $member->bio = $request->input('bio');
+    $member->contact_info = $request->input('contact_info');
+    $member->team_id = $request->input('team_id');
+    $member->email = $request->input('email');  // Assurez-vous de mettre à jour l'email dans la table des membres
+    $member->user_id = $request->input('user_id');
+
+    $member->save();
+
+    return response()->json(['message' => 'Membre mis à jour avec succès', 'member' => $member], 200);
+}
 
     public function destroy($id)
 {

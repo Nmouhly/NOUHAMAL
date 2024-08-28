@@ -84,74 +84,179 @@ class MemberController extends Controller
         return response()->json(['message' => 'Membre non trouvé'], 404);
     }
 }
-    public function update(Request $request, $id)
+//     public function update(Request $request, $id)
+// {
+//     // Validation des données de la requête
+//     $request->validate([
+//         'position' => 'required|string|max:255',
+//         'contact_info' => 'required|string|max:255',
+//         'bio' => 'nullable|string',
+//         'user_id' => 'nullable|integer|exists:users,id',
+//         'team_id' => 'nullable|integer|exists:teams,id',
+//         'statut' => 'nullable|string|max:255',
+//         'image' => 'nullable|string', // Validation de l'image en base64
+//     ]);
+
+//     // Trouver le membre
+//     $member = Member::find($id);
+
+//     if ($member) {
+//         // Mettre à jour les données du membre
+//         $member->update($request->only([
+//             'position',
+//             'contact_info',
+//             'bio',
+//             'team_id',
+//             'user_id',
+//             'statut'
+//         ]));
+
+//         // Gestion de l'image
+//         if ($request->image) {
+//             // Supprimer l'ancienne image si elle existe
+//             if ($member->image) {
+//                 Storage::disk('public')->delete($member->image);
+//             }
+
+//             try {
+//                 // Décoder et enregistrer la nouvelle image
+//                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+//                 $imageName = uniqid() . '.png'; // Nommez l'image avec un nom unique
+//                 $imagePath = 'images/member_images/' . $imageName;
+//                 Storage::disk('public')->put($imagePath, $imageData);
+
+//                 $member->image = $imagePath;
+//             } catch (\Exception $e) {
+//                 Log::error('Erreur lors du traitement de l\'image: ' . $e->getMessage());
+//                 return response()->json(['error' => 'Erreur lors du traitement de l\'image'], 500);
+//             }
+//         }
+
+//         // Gestion du changement de statut à "Ancien"
+//         if ($request->input('statut') === 'Ancien') {
+//             $member->update(['user_id' => null]);
+
+//             if ($request->input('user_id')) {
+//                 try {
+//                     $user = User::findOrFail($request->input('user_id'));
+//                     $user->delete();
+//                 } catch (\Exception $e) {
+//                     Log::error('Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage());
+//                     return response()->json(['error' => 'Erreur lors de la suppression de l\'utilisateur'], 500);
+//                 }
+//             }
+//         }
+
+//         return response()->json($member);
+//     }
+
+//     return response()->json(['message' => 'Membre non trouvé'], 404);
+// }
+public function update(Request $request, $id)
 {
-    // Validation des données de la requête
     $request->validate([
+        'name' => 'required|string|max:255',
         'position' => 'required|string|max:255',
-        'contact_info' => 'required|string|max:255',
-        'bio' => 'nullable|string',
-        'user_id' => 'nullable|integer|exists:users,id',
-        'team_id' => 'nullable|integer|exists:teams,id',
-        'statut' => 'nullable|string|max:255',
+        'bio' => 'required|string',
+        'contact_info' => 'required|string',
+        'statut' => 'required|string',
+        'email' => 'required|email',
         'image' => 'nullable|string', // Validation de l'image en base64
     ]);
 
-    // Trouver le membre
     $member = Member::find($id);
 
     if ($member) {
-        // Mettre à jour les données du membre
-        $member->update($request->only([
-            'position',
-            'contact_info',
-            'bio',
-            'team_id',
-            'user_id',
-            'statut'
-        ]));
+        $member->name = $request->name;
+        $member->position = $request->position;
+        $member->bio = $request->bio;
+        $member->contact_info = $request->contact_info;
+        $member->statut = $request->statut;
+        $member->email = $request->email;
 
-        // Gestion de l'image
-        if ($request->image) {
+        if ($request->hasFile('image')) {
             // Supprimer l'ancienne image si elle existe
             if ($member->image) {
                 Storage::disk('public')->delete($member->image);
             }
 
-            try {
-                // Décoder et enregistrer la nouvelle image
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
-                $imageName = uniqid() . '.png'; // Nommez l'image avec un nom unique
-                $imagePath = 'images/member_images/' . $imageName;
-                Storage::disk('public')->put($imagePath, $imageData);
+            // Décoder et enregistrer la nouvelle image
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+            $imageName = uniqid() . '.png'; // Nommez l'image avec un nom unique
+            $imagePath = 'member_images/' . $imageName;
+            Storage::disk('public')->put($imagePath, $imageData);
 
-                $member->image = $imagePath;
-            } catch (\Exception $e) {
-                Log::error('Erreur lors du traitement de l\'image: ' . $e->getMessage());
-                return response()->json(['error' => 'Erreur lors du traitement de l\'image'], 500);
-            }
+            $member->image = $imagePath;
         }
 
-        // Gestion du changement de statut à "Ancien"
         if ($request->input('statut') === 'Ancien') {
-            $member->update(['user_id' => null]);
-
-            if ($request->input('user_id')) {
+            // Si le membre devient "Ancien", désassigner l'utilisateur
+            $userId = $member->user_id;
+            
+        
+            // Supprimer l'utilisateur associé
+            if ($userId) {
                 try {
-                    $user = User::findOrFail($request->input('user_id'));
-                    $user->delete();
+                    $user = User::findOrFail($userId);
+                   // $user->delete(); // Supprimer l'utilisateur
                 } catch (\Exception $e) {
+                    // Enregistrer l'erreur dans les logs si la suppression échoue
                     Log::error('Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage());
                     return response()->json(['error' => 'Erreur lors de la suppression de l\'utilisateur'], 500);
                 }
             }
         }
 
+        $member->save();
+
         return response()->json($member);
     }
 
     return response()->json(['message' => 'Membre non trouvé'], 404);
 }
+public function updateMember(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'position' => 'nullable|string|max:255',
+        'bio' => 'nullable|string',
+        'contact_info' => 'nullable|string',
+        'image' => 'nullable|string', // Assuming the image is in base64 format
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
+
+    $member = Member::find($id);
+
+    if (!$member) {
+        return response()->json(['error' => 'Membre non trouvé'], 404);
+    }
+
+    $member->position = $request->input('position', $member->position);
+    $member->bio = $request->input('bio', $member->bio);
+    $member->contact_info = $request->input('contact_info', $member->contact_info);
+
+    if ($request->has('image')) {
+        // Delete the old image if it exists
+        if ($member->image) {
+            Storage::disk('public')->delete($member->image);
+        }
+
+        // Decode and save the new image
+        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+        $imageName = uniqid() . '.png'; // Generate a unique name for the image
+        $imagePath = 'member_images/' . $imageName;
+        Storage::disk('public')->put($imagePath, $imageData);
+
+        $member->image = $imagePath;
+    }
+
+    $member->save();
+
+    return response()->json(['message' => 'Membre mis à jour avec succès', 'member' => $member], 200);
+}
+
     public function destroy($id)
     {
         $member = Member::findOrFail($id);

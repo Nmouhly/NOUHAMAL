@@ -21,49 +21,101 @@ class OuvrageController extends Controller
         return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
 
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'pdf_link' => 'nullable|url',
+            
+    //     ]);
+
+        
+    //     $ouvrage = Ouvrage::create([
+    //         'title' => $request->title,
+    //         'author' => $request->author,
+    //         'pdf_link' => $request->pdf_link,
+           
+    //     ]);
+
+    //     return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
+    // }
     public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'pdf_link' => 'nullable|url',
-            // 'id_user' => 'required|integer|exists:users,id', // Validation de l'id_user
-        ]);
+{
+    // Valider les données du formulaire
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'DOI' => 'required|string|max:255',
+        'id_user' => 'nullable|exists:members,user_id', // Valider que id_user est présent dans la table members
+    ]);
 
-        // Créer un nouvel ouvrage avec id_user
-        $ouvrage = Ouvrage::create([
-            'title' => $request->title,
-            'author' => $request->author,
-            'pdf_link' => $request->pdf_link,
-            // 'id_user' => $request->id_user, // Ajouter id_user ici
-        ]);
+    // Créer un nouvel ouvrage avec les données validées
+    $ouvrage = Ouvrage::create([
+        'title' => $request->title,
+        'author' => $request->author,
+        'DOI' => $request->DOI,
+        'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+    ]);
 
-        return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
-    }
+    // Retourner une réponse JSON avec un message de succès
+    return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
+}
 
 
+
+    // public function update(Request $request, $id)
+    // {
+    //     // Valider les données de la requête
+    //     $validatedData = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'pdf_link' => 'nullable|url',
+    //     ]);
+
+    //     // Trouver l'ouvrage par son ID
+    //     $ouvrage = Ouvrage::find($id);
+
+    //     if ($ouvrage) {
+    //         // Mettre à jour l'ouvrage avec les données validées
+    //         $ouvrage->update($validatedData);
+    //         return response()->json($ouvrage);
+    //     }
+
+    //     // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
+    //     return response()->json(['message' => 'Ouvrage non trouvé'], 404);
+    // }
     public function update(Request $request, $id)
     {
         // Valider les données de la requête
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'pdf_link' => 'nullable|url',
+            'DOI' => 'required|string|max:255',
+            'id_user' => 'nullable|exists:members,user_id', // Valider id_user
         ]);
-
+    
         // Trouver l'ouvrage par son ID
         $ouvrage = Ouvrage::find($id);
-
+    
         if ($ouvrage) {
             // Mettre à jour l'ouvrage avec les données validées
             $ouvrage->update($validatedData);
             return response()->json($ouvrage);
         }
-
+    
         // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
         return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
+    public function getByUser($id_user)
+{
+    // Récupérer les ouvrages associés à l'id_user spécifié
+    $ouvrages = Ouvrage::where('id_user', $id_user)->get();
 
+
+    // Retourner les ouvrages trouvés
+    return response()->json($ouvrages);
+}
     public function destroy($id)
     {
         $ouvrage = Ouvrage::find($id);
@@ -73,4 +125,5 @@ class OuvrageController extends Controller
         }
         return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
+    
 }
