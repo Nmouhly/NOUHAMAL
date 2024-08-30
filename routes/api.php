@@ -13,6 +13,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PatentController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\SeminarController;
 use App\Http\Controllers\AxeController;
 use App\Http\Controllers\PresentationController;
@@ -22,6 +23,14 @@ use Illuminate\Support\Facades\Auth;
 //  Route::post('/test/{id}', [NewsController::class, 'update']);
 //Route::apiResource('seminars', SeminarController::class);
 // Route::put('/news/{id}', [NewsController::class, 'update']);
+// Route::post('job-offers', [JobOfferController::class, 'store']);
+// Route::put('job-offers/{id}', [JobOfferController::class, 'update']);
+// Route::delete('job-offers/{id}', [JobOfferController::class, 'destroy']);
+Route::get('job-offers', [JobOfferController::class, 'index']);
+Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
+Route::put('/member/{id}', [MemberController::class, 'updateMember'])->name('member.update');
+Route::put('/user/{id}', [UserController::class, 'updateUser'])->name('user.update');
+Route::put('/ouvrages/{id}', [OuvrageController::class, 'update']);
 Route::get('ouvrages/user/{id_user}', [OuvrageController::class, 'getByUser']);
 Route::post('/ouvrages', [OuvrageController::class, 'store']);
 Route::put('/members/{id}', [MemberController::class, 'update']);
@@ -62,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::get('/ouvrages', [OuvrageController::class, 'index']);
     Route::get('/ouvrages/{id}', [OuvrageController::class, 'show']);
   
-    Route::put('/ouvrages/{id}', [OuvrageController::class, 'update']);
+    
 
     Route::get('/reports', [ReportController::class, 'index']);
     Route::get('/reports/{id}', [ReportController::class, 'show']);
@@ -98,9 +107,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/revues/{id}', [RevueController::class, 'show']);
     Route::put('/revues/{id}', [RevueController::class, 'update']);
     Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
+    Route::post('job-offers', [JobOfferController::class, 'store']);
+    Route::put('job-offers/{id}', [JobOfferController::class, 'update']);
+    Route::delete('job-offers/{id}', [JobOfferController::class, 'destroy']);
     
     // User CRUD
-    Route::get('/users', [UserController::class, 'index']); // Get all users
+     // Get all users
     Route::get('/users/{id}', [UserController::class, 'show']); // Get specific user
     Route::put('/users/{id}', [UserController::class, 'update']); // Update specific user
     Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete specific user
@@ -131,7 +143,7 @@ Route::get('/members', [MemberController::class, 'index']);
 Route::get('/members/{id}', [MemberController::class, 'show']);
 Route::get('members/user/{userId}', [MemberController::class, 'getByUserId']);
 Route::put('/user/{id}', [UserController::class, 'updateUser'])->name('user.update');
-    Route::put('/member/{id}', [MemberController::class, 'updateMember'])->name('member.update');
+   
 Route::get('/seminars', [SeminarController::class, 'index']);
 Route::get('/seminars/{id}', [SeminarController::class, 'show']);
 Route::get('/equipe', [TeamController::class, 'index']);
@@ -148,4 +160,7 @@ Route::get('ouvrages', [OuvrageController::class, 'index']);
 Route::get('reports', [ReportController::class, 'index']);
 Route::get('conferences', [ConferenceController::class, 'index']);
 Route::get('patents', [PatentController::class, 'index']);
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+
 Route::get('/revues', [RevueController::class, 'index']);

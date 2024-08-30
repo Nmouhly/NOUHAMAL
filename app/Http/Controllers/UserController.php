@@ -13,37 +13,71 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    // public function store(Request $request)
+    // {
+    //     // Validation des données de la requête
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|string|email|max:255|unique:users',
+    //         'password' => 'required|string|min:8',
+    //         'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
+    //     ]);
+
+    //     // Retourner une réponse en cas d'erreurs de validation
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'errors' => $validator->errors(),
+    //         ], 422);
+    //     }
+
+    //     // Création de l'utilisateur
+    //     $user = User::create([
+    //         'name' => $request->input('name'),
+    //         'email' => $request->input('email'),
+    //         'password' => Hash::make($request->input('password')), // Hachage du mot de passe
+    //         'role' => (int) $request->input('role'), // Conversion en entier
+    //     ]);
+
+    //     // Retourner une réponse de succès
+    //     return response()->json([
+    //         'message' => 'Utilisateur créé avec succès.',
+    //         'user' => $user,
+    //     ], 201);
+    // }
     public function store(Request $request)
-    {
-        // Validation des données de la requête
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
-        ]);
+{
+    // Validation des données de la requête
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8',
+        'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
+        'bio' => 'nullable|string|max:500', // Validation du bio, non obligatoire
+    ]);
 
-        // Retourner une réponse en cas d'erreurs de validation
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        // Création de l'utilisateur
-        $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')), // Hachage du mot de passe
-            'role' => (int) $request->input('role'), // Conversion en entier
-        ]);
-
-        // Retourner une réponse de succès
+    // Retourner une réponse en cas d'erreurs de validation
+    if ($validator->fails()) {
         return response()->json([
-            'message' => 'Utilisateur créé avec succès.',
-            'user' => $user,
-        ], 201);
+            'errors' => $validator->errors(),
+        ], 422);
     }
+
+    // Création de l'utilisateur
+    $user = User::create([
+        'name' => $request->input('name'),
+        'email' => $request->input('email'),
+        'password' => Hash::make($request->input('password')), // Hachage du mot de passe
+        'role' => (int) $request->input('role'), // Conversion en entier
+        'bio' => $request->input('bio', ''), // Valeur par défaut vide si non fourni
+    ]);
+
+    // Retourner une réponse de succès
+    return response()->json([
+        'message' => 'Utilisateur créé avec succès.',
+        'user' => $user,
+    ], 201);
+}
+
 
     public function auth(AuthUserRequest $request)
     {
@@ -141,36 +175,7 @@ class UserController extends Controller
 
         return response()->json($user);
     }
-    public function updateMember(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'position' => 'nullable|string|max:255',
-        'bio' => 'nullable|string',
-        'contact_info' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
-    }
-
-    $member = Member::find($id);
-
-    if (!$member) {
-        return response()->json(['error' => 'Membre non trouvé'], 404);
-    }
-
-    $member->position = $request->input('position');
-    $member->bio = $request->input('bio');
-    $member->contact_info = $request->input('contact_info');
-    $member->team_id = $request->input('team_id');
-    $member->email = $request->input('email');  // Assurez-vous de mettre à jour l'email dans la table des membres
-    $member->user_id = $request->input('user_id');
-
-    $member->save();
-
-    return response()->json(['message' => 'Membre mis à jour avec succès', 'member' => $member], 200);
-}
-
+   
     public function destroy($id)
 {
     $user = User::find($id);

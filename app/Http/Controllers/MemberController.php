@@ -6,6 +6,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class MemberController extends Controller
 {
@@ -198,7 +199,7 @@ public function update(Request $request, $id)
             if ($userId) {
                 try {
                     $user = User::findOrFail($userId);
-                   // $user->delete(); // Supprimer l'utilisateur
+                    $user->delete(); // Supprimer l'utilisateur
                 } catch (\Exception $e) {
                     // Enregistrer l'erreur dans les logs si la suppression échoue
                     Log::error('Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage());
@@ -213,48 +214,6 @@ public function update(Request $request, $id)
     }
 
     return response()->json(['message' => 'Membre non trouvé'], 404);
-}
-public function updateMember(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'position' => 'nullable|string|max:255',
-        'bio' => 'nullable|string',
-        'contact_info' => 'nullable|string',
-        'image' => 'nullable|string', // Assuming the image is in base64 format
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
-    }
-
-    $member = Member::find($id);
-
-    if (!$member) {
-        return response()->json(['error' => 'Membre non trouvé'], 404);
-    }
-
-    $member->position = $request->input('position', $member->position);
-    $member->bio = $request->input('bio', $member->bio);
-    $member->contact_info = $request->input('contact_info', $member->contact_info);
-
-    if ($request->has('image')) {
-        // Delete the old image if it exists
-        if ($member->image) {
-            Storage::disk('public')->delete($member->image);
-        }
-
-        // Decode and save the new image
-        $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
-        $imageName = uniqid() . '.png'; // Generate a unique name for the image
-        $imagePath = 'member_images/' . $imageName;
-        Storage::disk('public')->put($imagePath, $imageData);
-
-        $member->image = $imagePath;
-    }
-
-    $member->save();
-
-    return response()->json(['message' => 'Membre mis à jour avec succès', 'member' => $member], 200);
 }
 
     public function destroy($id)

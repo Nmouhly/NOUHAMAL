@@ -14,9 +14,9 @@ class Ouvrage extends Model
         'id_user',
        
     ];
-    public function member()
-    {
-        return $this->belongsTo(Member::class, 'id_user', 'user_id');
-    }
+    // public function member()
+    // {
+    //     return $this->belongsTo(Member::class, 'id_user', 'user_id');
+    // }
 }
 

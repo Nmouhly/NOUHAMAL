@@ -47,7 +47,7 @@ class OuvrageController extends Controller
         'title' => 'required|string|max:255',
         'author' => 'required|string|max:255',
         'DOI' => 'required|string|max:255',
-        'id_user' => 'nullable|exists:members,user_id', // Valider que id_user est présent dans la table members
+        'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
     ]);
 
     // Créer un nouvel ouvrage avec les données validées
@@ -85,6 +85,15 @@ class OuvrageController extends Controller
     //     // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
     //     return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     // }
+    public function getOuvragesByUserOrContributor($id_user)
+    {
+        // Récupérer les ouvrages où id_user est l'utilisateur ou où il est dans une chaîne de IDs (contributeurs)
+        $ouvrages = Ouvrage::where('id_user', $id_user)
+            ->orWhere('id_user', 'like', '%' . $id_user . '%')
+            ->get();
+
+        return response()->json($ouvrages);
+    }
     public function update(Request $request, $id)
     {
         // Valider les données de la requête
@@ -92,7 +101,7 @@ class OuvrageController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'nullable|exists:members,user_id', // Valider id_user
+            'id_user' => 'string|max:255', 
         ]);
     
         // Trouver l'ouvrage par son ID
