@@ -12,6 +12,8 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PatentController;
+use App\Http\Controllers\HomeDescriptionController;
+
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\SeminarController;
@@ -27,15 +29,22 @@ use Illuminate\Support\Facades\Auth;
 // Route::put('job-offers/{id}', [JobOfferController::class, 'update']);
 // Route::delete('job-offers/{id}', [JobOfferController::class, 'destroy']);
 Route::get('job-offers', [JobOfferController::class, 'index']);
+Route::get('/home-descriptions', [HomeDescriptionController::class,'index']);
 Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
 Route::put('/member/{id}', [MemberController::class, 'updateMember'])->name('member.update');
 Route::put('/user/{id}', [UserController::class, 'updateUser'])->name('user.update');
 Route::put('/ouvrages/{id}', [OuvrageController::class, 'update']);
+Route::put('/ouvragesUser/{id}', [OuvrageController::class, 'updateOuvrage']);
 Route::get('ouvrages/user/{id_user}', [OuvrageController::class, 'getByUser']);
 Route::post('/ouvrages', [OuvrageController::class, 'store']);
+Route::post('/revues', [RevueController::class, 'store']);
 Route::put('/members/{id}', [MemberController::class, 'update']);
 Route::put('/news/{id}', [NewsController::class, 'update']);
+Route::get('/ouvragesUsers/{id}', [OuvrageController::class, 'showUser']);
+Route::get('/revuesUsers/{id}', [RevueController::class, 'showUser']);
 Route::delete('/ouvrages/{id}', [OuvrageController::class, 'destroy']);
+Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
+Route::put('/revues/{id}', [RevueController::class, 'update']);
 // Group routes that require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // User logout
@@ -50,7 +59,11 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::delete('/news/{id}', [NewsController::class, 'destroy']);
 
 
-
+    
+     Route::post('home-descriptions', [HomeDescriptionController::class, 'store']);
+     Route::put('home-descriptions/{id}', [HomeDescriptionController::class, 'update']);
+     Route::delete('home-descriptions/{id}', [HomeDescriptionController::class, 'destroy']);
+     Route::get('/home-descriptions/{id}', [HomeDescriptionController::class,'show']);
     // Admin dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'index']);
     
@@ -103,10 +116,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
     Route::get('/revues', [RevueController::class, 'index']);
-    Route::post('/revues', [RevueController::class, 'store']);
+   // Route::post('/revues', [RevueController::class, 'store']);
     Route::get('/revues/{id}', [RevueController::class, 'show']);
-    Route::put('/revues/{id}', [RevueController::class, 'update']);
-    Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
+    
+    //Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
     Route::post('job-offers', [JobOfferController::class, 'store']);
     Route::put('job-offers/{id}', [JobOfferController::class, 'update']);
     Route::delete('job-offers/{id}', [JobOfferController::class, 'destroy']);
@@ -162,5 +175,6 @@ Route::get('conferences', [ConferenceController::class, 'index']);
 Route::get('patents', [PatentController::class, 'index']);
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
 
 Route::get('/revues', [RevueController::class, 'index']);

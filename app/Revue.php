@@ -10,7 +10,8 @@ class Revue extends Model
     protected $fillable = [
         'title',
         'author',
-        'pdf_link',
+        'DOI',
+        'id_user',
     ];
 
     // Définissez les règles de validation des attributs de date, si nécessaire

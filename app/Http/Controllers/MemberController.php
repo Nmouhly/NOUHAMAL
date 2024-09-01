@@ -67,7 +67,49 @@ class MemberController extends Controller
             return response()->json(['error' => 'Erreur lors de l\'ajout du membre'], 500);
         }
     }
+    public function updateMember(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'position' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'contact_info' => 'nullable|string',
+            'image' => 'nullable|string', // Assuming the image is in base64 format
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+    
+        $member = Member::find($id);
+    
+        if (!$member) {
+            return response()->json(['error' => 'Membre non trouvé'], 404);
+        }
+    
+        $member->update([
+            'position' => $request->input('position', $member->position),
+            'bio' => $request->input('bio', $member->bio),
+            'contact_info' => $request->input('contact_info', $member->contact_info),
+        ]);
+    
+        if ($request->image) {
+            // Supprimer l'ancienne image si elle existe
+            if ($member->image) {
+                Storage::disk('public')->delete($member->image);
+            }
 
+            // Décoder et enregistrer la nouvelle image
+            $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->image));
+            $imageName = uniqid() . '.png'; // Nommez l'image avec un nom unique
+            $imagePath = 'member_images/' . $imageName;
+            Storage::disk('public')->put($imagePath, $imageData);
+
+            $member->image = $imagePath;
+        }
+        $member->save();
+        return response()->json($member);
+    }
+    
     public function show($id)
     {
         $member = Member::findOrFail($id);

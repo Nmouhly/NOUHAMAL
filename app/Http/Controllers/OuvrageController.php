@@ -11,7 +11,14 @@ class OuvrageController extends Controller
         $ouvrages = Ouvrage::all();
         return response()->json($ouvrages);
     }
-
+    public function showUser($id)
+    {
+        $ouvrage = Ouvrage::find($id);
+        if ($ouvrage) {
+            return response()->json($ouvrage);
+        }
+        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
+    }
     public function show($id)
     {
         $ouvrage = Ouvrage::find($id);
@@ -93,6 +100,28 @@ class OuvrageController extends Controller
             ->get();
 
         return response()->json($ouvrages);
+    }
+    public function updateOuvrage(Request $request, $id)
+    {
+        // Valider les données de la requête
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'DOI' => 'required|string|max:255',
+            'id_user' => 'string|max:255', 
+        ]);
+    
+        // Trouver l'ouvrage par son ID
+        $ouvrage = Ouvrage::find($id);
+    
+        if ($ouvrage) {
+            // Mettre à jour l'ouvrage avec les données validées
+            $ouvrage->update($validatedData);
+            return response()->json($ouvrage);
+        }
+    
+        // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
+        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
     public function update(Request $request, $id)
     {

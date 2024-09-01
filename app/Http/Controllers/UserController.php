@@ -146,6 +146,31 @@ class UserController extends Controller
             ], 404);
         }
     }
+    public function updateUser(Request $request, $id)
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
+
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+    }
+
+    $user->update([
+        'name' => $request->input('name'),
+        'email' => $request->input('email'),
+    ]);
+
+    return response()->json(['message' => 'Utilisateur mis à jour avec succès', 'user' => $user], 200);
+}
+
 
     public function update(Request $request, $id)
     {
