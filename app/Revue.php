@@ -15,7 +15,5 @@ class Revue extends Model
     ];
 
     // Définissez les règles de validation des attributs de date, si nécessaire
-    protected $casts = [
-        'pdf_link' => 'string',
-    ];
+  
 }

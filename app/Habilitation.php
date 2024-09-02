@@ -4,13 +4,17 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Report extends Model
-{protected $table = 'reports';
+class Habilitation extends Model
+{
+    protected $table = 'habilitations';
+
+    // Attributs remplissables
     protected $fillable = [
         'title',
         'author',
-        'summary',
-        'DOI',
+        'doi',
         'id_user',
+        'lieu',
+        'date',
     ];
 }

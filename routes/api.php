@@ -10,10 +10,12 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\RevueController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TheseController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\HabilitationController;
 use App\Http\Controllers\PatentController;
 use App\Http\Controllers\HomeDescriptionController;
-
+use App\Http\Controllers\BrevetController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\SeminarController;
@@ -28,7 +30,22 @@ use Illuminate\Support\Facades\Auth;
 // Route::post('job-offers', [JobOfferController::class, 'store']);
 // Route::put('job-offers/{id}', [JobOfferController::class, 'update']);
 // Route::delete('job-offers/{id}', [JobOfferController::class, 'destroy']);
+Route::put('/brevets/{id}', [BrevetController::class, 'update']);
+Route::put('/brevetsUser/{id}', [BrevetController::class, 'updateBrevet']);
+Route::get('/brevets/{id}', [BrevetController::class,'show']);
+Route::delete('/brevets/{id}', [BrevetController::class, 'destroy']);
+ Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
+ Route::post('/brevets', [BrevetController::class, 'store']);
+Route::post('/theses', [TheseController::class,'store']);
+Route::delete('/theses/{id}', [TheseController::class, 'destroy']);
+Route::get('/theses', [TheseController::class, 'index']);
+Route::get('/brevets', [BrevetController::class, 'index']);
+Route::get('/theses/{id}', [TheseController::class,'show']);
+Route::put('/theses/{id}', [TheseController::class, 'update']);
+Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
 Route::get('job-offers', [JobOfferController::class, 'index']);
+Route::post('/reports', [ReportController::class, 'store']);
+Route::put('/reports/{id}', [ReportController::class, 'update']);
 Route::get('/home-descriptions', [HomeDescriptionController::class,'index']);
 Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
 Route::put('/member/{id}', [MemberController::class, 'updateMember'])->name('member.update');
@@ -45,6 +62,11 @@ Route::get('/revuesUsers/{id}', [RevueController::class, 'showUser']);
 Route::delete('/ouvrages/{id}', [OuvrageController::class, 'destroy']);
 Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
 Route::put('/revues/{id}', [RevueController::class, 'update']);
+Route::post('/habilitations', [HabilitationController::class, 'store']);
+Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
+Route::get('/theses', [TheseController::class, 'index']);
+Route::get('/habilitations', [HabilitationController::class,'index']);
+Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
 // Group routes that require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // User logout
@@ -86,11 +108,11 @@ Route::middleware('auth:sanctum')->group(function () {
   
     
 
-    Route::get('/reports', [ReportController::class, 'index']);
-    Route::get('/reports/{id}', [ReportController::class, 'show']);
-    Route::post('/reports', [ReportController::class, 'store']);
-    Route::put('/reports/{id}', [ReportController::class, 'update']);
-    Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+ 
+    
+    
+  
+    
     Route::get('/conferences', [ConferenceController::class, 'index']);
     Route::get('/conferences/{id}', [ConferenceController::class, 'show']);
     Route::post('/conferences', [ConferenceController::class, 'store']);
@@ -171,10 +193,11 @@ Route::get('/projects/completed', [ProjectController::class, 'completedProjects'
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
 Route::get('ouvrages', [OuvrageController::class, 'index']);
 Route::get('reports', [ReportController::class, 'index']);
+Route::get('/reports/{id}', [ReportController::class, 'show']);
 Route::get('conferences', [ConferenceController::class, 'index']);
 Route::get('patents', [PatentController::class, 'index']);
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
 Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
-
+Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
 Route::get('/revues', [RevueController::class, 'index']);

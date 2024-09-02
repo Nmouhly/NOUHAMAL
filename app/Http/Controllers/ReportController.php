@@ -6,6 +6,15 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    public function getReportByUserOrContributor($id_user)
+    {
+        // Récupérer les ouvrages où id_user est l'utilisateur ou où il est dans une chaîne de IDs (contributeurs)
+        $ouvrages = Report::where('id_user', $id_user)
+            ->orWhere('id_user', 'like', '%' . $id_user . '%')
+            ->get();
+
+        return response()->json($ouvrages);
+    }
     public function index()
     {
         $rapports = Report::all();
@@ -27,7 +36,8 @@ class ReportController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'summary' => 'nullable|string',
-            'pdf_link' => 'nullable|url',
+            'DOI' => 'required|string|max:255',
+           'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
         ]);
 
         $rapport = Report::create($request->all());
@@ -41,7 +51,8 @@ class ReportController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'summary' => 'nullable|string',
-            'pdf_link' => 'nullable|url',
+           'DOI' => 'required|string|max:255',
+            'id_user' => 'string|max:255', 
         ]);
 
         $rapport = Report::find($id);
