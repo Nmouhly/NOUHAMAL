@@ -61,7 +61,7 @@ class SeminarController extends Controller
             'description' => 'nullable|string',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-           //'end_time' => 'required|date_format:H:i',
+           'end_time' => 'required|date_format:H:i',
             'location' => 'required|string|max:255',
             'speaker' => 'required|string|max:255',
             'status' => 'nullable|string|max:255', // Validation pour le champ 'status' avec les valeurs autorisées

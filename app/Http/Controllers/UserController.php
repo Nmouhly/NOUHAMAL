@@ -79,36 +79,38 @@ class UserController extends Controller
 }
 
 
-    public function auth(AuthUserRequest $request)
-    {
-        // Validation des données de la requête
-        if ($request->validated()) {
-            // Récupérer l'utilisateur par email
-            $user = User::whereEmail($request->email)->first();
+public function auth(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-            // Vérifier si l'utilisateur existe et si le mot de passe est correct
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
-                ], 401); // Code de statut 401 Unauthorized
-            }
+    $user = User::where('email', $request->email)->first();
 
-            // Vérifier le rôle de l'utilisateur
-            if ($user->role === 1) { // 1 représente un administrateur
-                return response()->json([
-                    'user' => $user,
-                    'currentToken' => $user->createToken('new_user')->plainTextToken
-                ]);
-            } else {
-                // Redirection ou réponse pour un utilisateur non administrateur
-                return response()->json([
-                    'user' => $user,
-                    'message' => 'Redirection vers la page utilisateur.',
-                    'redirectUrl' => url('/user/UserProfile') // URL de redirection pour l'utilisateur non administrateur
-                ]);
-            }
-        }
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response()->json([
+            'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
+        ], 401);
     }
+
+    
+
+    if ($user->role === 1) {
+        return response()->json([
+            'user' => $user,
+            'currentToken' => $user->createToken('new_user')->plainTextToken,
+            'message' => 'Connexion réussie. Vous êtes un admin.',
+        ]);
+    } else {
+        return response()->json([
+            'user' => $user,
+            'currentToken' => $user->createToken('new_user')->plainTextToken,
+            'message' => 'Connexion réussie. Vous êtes un utilisateur.',
+        ]);
+    }
+}
+
 
     public function logout(Request $request)
     {
