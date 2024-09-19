@@ -22,12 +22,36 @@ class RevueController extends Controller
     }
     public function showUser($id)
     {
-        $ouvrage = Revue::find($id);
-        if ($ouvrage) {
-            return response()->json($ouvrage);
+        $brevet = Revue::find($id);
+        if ($brevet) {
+            // Séparez les auteurs avec et sans ID
+            $authorNames = explode(', ', $brevet->author);
+            $authorIds = explode(',', $brevet->id_user);
+
+            $authorsWithIds = [];
+            $authorsWithoutIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $authorsWithIds[] = $name;
+                } else {
+                    $authorsWithoutIds[] = $name;
+                }
+            }
+
+            return response()->json([
+                'title' => $brevet->title,
+                'doi' => $brevet->DOI, // Changer en minuscules pour correspondre au frontend
+                'authors_with_ids' => $authorsWithIds,
+                'author_ids' => $authorIds,
+                'authors_without_ids' => $authorsWithoutIds
+            ]);
+        } else {
+            return response()->json(['message' => 'Revue not found'], 404);
         }
-        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
+
+
     public function store(Request $request)
     {
         // Valide les données
@@ -57,26 +81,54 @@ class RevueController extends Controller
     }
     public function updateRevues(Request $request, $id)
     {
-        // Valider les données de la requête
-        $validatedData = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', 
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
         ]);
-    
-        // Trouver l'ouvrage par son ID
-        $ouvrage = Revue::find($id);
-    
-        if ($ouvrage) {
-            // Mettre à jour l'ouvrage avec les données validées
-            $ouvrage->update($validatedData);
-            return response()->json($ouvrage);
+
+        try {
+            $brevet = Revue::findOrFail($id);
+
+            $title = $request->input('title');
+            $DOI = $request->input('DOI');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs
+            $brevet->title = $title;
+            $brevet->author = implode(', ', $finalAuthorNames);
+            $brevet->DOI = $DOI;
+            $brevet->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+
+            $brevet->save();
+
+            return response()->json(['message' => 'Revue updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating revue', 'error' => $e->getMessage()], 500);
         }
-    
-        // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
-        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
+
+
     public function update(Request $request, $id)
     {
         // Valide les données
@@ -84,7 +136,7 @@ class RevueController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', 
+            'id_user' => 'string|max:255',
         ]);
 
         // Trouve la revue par ID
@@ -114,4 +166,16 @@ class RevueController extends Controller
 
         return response()->json(['message' => 'Revue non trouvée'], 404);
     }
+
+    // Exemple dans Laravel (Contrôleur RevueController)
+    // Exemple dans Laravel (Contrôleur RevueController)
+    public function checkDOIExists(Request $request)
+    {
+        $doi = $request->input('doi');
+        $exists = Revue::where('DOI', $doi)->exists(); // Revue est le modèle pour votre table des revues
+
+        return response()->json(['exists' => $exists]);
+    }
+
+
 }

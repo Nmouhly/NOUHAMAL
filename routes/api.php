@@ -36,11 +36,10 @@ Route::get('/equipe', [TeamController::class, 'index']);
 Route::get('/equipe/{id}', [TeamController::class, 'show']);
 Route::get('/axes', [AxeController::class, 'index']);
 Route::get('/presentations', [PresentationController::class, 'index']);
-Route::get('/home-descriptions', [HomeDescriptionController::class,'index']);
-Route::get('/habilitations/{id}', [HabilitationController::class,'show']);
+Route::get('/home-descriptions', [HomeDescriptionController::class, 'index']);
+Route::get('/habilitations/{id}', [HabilitationController::class, 'show']);
 Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
 Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
-Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
 Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
 Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
 Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
@@ -57,14 +56,12 @@ Route::get('conferences', [ConferenceController::class, 'index']);
 Route::get('patents', [PatentController::class, 'index']);
 Route::get('brevets', [BrevetController::class, 'index']);
 Route::get('/users', [UserController::class, 'index']);
-Route::get('job-offers', [JobOfferController::class,'index']);
-Route::get('/statistics', [StatisticsController::class,'index']);
-Route::get('job-offers/{id}', [JobOfferController::class,'show']);
-Route::get('/revues', [RevueController::class,'index']);
-Route::get('/theses', [TheseController::class,'index']);
-Route::get('/habilitations', [HabilitationController::class,'index']);
-Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
-Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
+Route::get('job-offers', [JobOfferController::class, 'index']);
+Route::get('/statistics', [StatisticsController::class, 'index']);
+Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
+Route::get('/revues', [RevueController::class, 'index']);
+Route::get('/theses', [TheseController::class, 'index']);
+Route::get('/habilitations', [HabilitationController::class, 'index']);
 
 // Routes accessibles avec authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -81,6 +78,30 @@ Route::middleware('auth:sanctum')->group(function () {
             'currentToken' => $request->bearerToken()
         ];
     });
+
+    //users 
+    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+
+    //revue
+    Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
+    Route::get('/revueUser/{id}', [RevueController::class, 'showUser']);
+    Route::put('/revueUser/{id}', [RevueController::class, 'updateRevues']);
+    Route::post('/revueUser', [RevueController::class, 'store']);
+    Route::delete('/revuesUser/{id}', [RevueController::class, 'destroy']);
+    Route::post('/checkDOIExists', [RevueController::class, 'checkDOIExists']);
+
+    //ouvrages 
+    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+    Route::get('/ouvrageUser/{id}', [OuvrageController::class, 'showUser']);
+    Route::put('/ouvrageUser/{id}', [OuvrageController::class, 'updateOuvrage']);
+    Route::post('/ouvragesUser', [OuvrageController::class, 'store']);
+    Route::delete('/ouvragesUser/{id}', [OuvrageController::class, 'destroy']);
+    Route::post('/checkDOIExists', [OuvrageController::class, 'checkDOIExists']);
+
+
+
+
+
 
     // News routes
     Route::post('/news', [NewsController::class, 'store']);
@@ -123,7 +144,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Brevet routes
     Route::post('/brevets', [BrevetController::class, 'store']);
-    Route::put('/brevets/{id}', [BrevetController::class,'update']);
+    Route::put('/brevets/{id}', [BrevetController::class, 'update']);
     Route::delete('/brevets/{id}', [BrevetController::class, 'destroy']);
     Route::get('/brevets/{id}', [BrevetController::class, 'show']);
 
@@ -132,7 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/theses/{id}', [TheseController::class, 'update']);
     Route::delete('/theses/{id}', [TheseController::class, 'destroy']);
     Route::get('/theses/{id}', [TheseController::class, 'show']);
-    
+
 
     // Job Offer routes
     Route::post('/job-offers', [JobOfferController::class, 'store']);
@@ -153,28 +174,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('home-descriptions', [HomeDescriptionController::class, 'store']);
     Route::put('home-descriptions/{id}', [HomeDescriptionController::class, 'update']);
     Route::delete('home-descriptions/{id}', [HomeDescriptionController::class, 'destroy']);
-    Route::get('/home-descriptions/{id}', [HomeDescriptionController::class,'show']);
+    Route::get('/home-descriptions/{id}', [HomeDescriptionController::class, 'show']);
 
     // Team routes
     Route::post('/equipe', [TeamController::class, 'store']);
     Route::put('/equipe/{id}', [TeamController::class, 'update']);
     Route::delete('/equipe/{id}', [TeamController::class, 'destroy']);
-     //conference
-     Route::post('/conferences', [ConferenceController::class, 'store']);
+    //conference
+    Route::post('/conferences', [ConferenceController::class, 'store']);
     Route::delete('/conferences/{id}', [ConferenceController::class, 'destroy']);
-    Route::get('/conferences/{id}', [ConferenceController::class,'show']);
-    Route::put('/conferences/{id}', [ConferenceController::class,'update']);
+    Route::get('/conferences/{id}', [ConferenceController::class, 'show']);
+    Route::put('/conferences/{id}', [ConferenceController::class, 'update']);
     //repots
-    Route::delete('/reports/{id}', [ReportController::class,'destroy']);
-    Route::get('/reports/{id}', [ReportController::class,'show']);
-    Route::post('/reports', [ReportController::class,'store']);
-    Route::put('/reports/{id}', [ReportController::class,'update']);
+    Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+    Route::get('/reports/{id}', [ReportController::class, 'show']);
+    Route::post('/reports', [ReportController::class, 'store']);
+    Route::put('/reports/{id}', [ReportController::class, 'update']);
 
-     //Axe
-     Route::post('/axes', [AxeController::class, 'store']);
+    //Axe
+    Route::post('/axes', [AxeController::class, 'store']);
     Route::get('/axes/{id}', [AxeController::class, 'show']);
     Route::put('/axes/{id}', [AxeController::class, 'update']);
-    Route::delete('/axes/{id}', [AxeController::class,'destroy']);
+    Route::delete('/axes/{id}', [AxeController::class, 'destroy']);
     // Admin dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 
