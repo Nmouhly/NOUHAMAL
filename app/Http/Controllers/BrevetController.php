@@ -6,13 +6,32 @@ use Illuminate\Http\Request;
 
 class BrevetController extends Controller
 {
-    public function index()
-    {
-        $brevets = Brevet::all();
-        return response()->json($brevets);
-    }
+
 
     // Ajouter un nouveau brevet
+    public function storeUser(Request $request)
+    {
+        // Valider les données du formulaire
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'doi' => 'required|string|max:255',
+            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+        ]);
+
+        // Créer un nouvel ouvrage avec les données validées
+        $brevets = Brevet::create([
+            'title' => $request->title,
+            'author' => $request->author,
+            'doi' => $request->doi,
+            'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+            'status' => 'en attente', // Statut par défaut
+
+        ]);
+
+        // Retourner une réponse JSON avec un message de succès
+        return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
+    }
     public function store(Request $request)
     {
         // Valider les données du formulaire
@@ -29,6 +48,7 @@ class BrevetController extends Controller
             'author' => $request->author,
             'doi' => $request->doi,
             'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+            'status' => 'approuvé',
         ]);
 
         // Retourner une réponse JSON avec un message de succès
@@ -48,50 +68,105 @@ class BrevetController extends Controller
         return response()->json(['message' => 'Brevet non trouvé'], 404);
     }
 
-    public function update(Request $request, $id)
-    {
-        // Valider les données de la requête
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', 
-        ]);
-    
-        // Trouver l'ouvrage par son ID
-        $ouvrage = Brevet::find($id);
-    
-        if ($ouvrage) {
-            // Mettre à jour l'ouvrage avec les données validées
-            $ouvrage->update($validatedData);
-            return response()->json($ouvrage);
-        }
-    
-        // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
-        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
-    }
+
     // Mettre à jour un brevet existant
     public function updateBrevet(Request $request, $id)
     {
-        // Valider les données de la requête
-        $validatedData = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'doi' => 'required|string|max:255',
-            'id_user' => 'string|max:255', 
+            'DOI' => 'required|string|max:255',
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
         ]);
-    
-        // Trouver l'ouvrage par son ID
-        $ouvrage = Brevet::find($id);
-    
-        if ($ouvrage) {
-            // Mettre à jour l'ouvrage avec les données validées
-            $ouvrage->update($validatedData);
-            return response()->json($ouvrage);
+
+        try {
+            $brevet = Brevet::findOrFail($id);
+
+            $title = $request->input('title');
+            $DOI = $request->input('DOI');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs
+            $brevet->title = $title;
+            $brevet->author = implode(', ', $finalAuthorNames);
+            $brevet->doi = $DOI;
+            $brevet->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+            $brevet->status = 'en attente';
+
+            $brevet->save();
+
+            return response()->json(['message' => 'Brevet mis à jour avec succès']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la mise à jour du brevet', 'error' => $e->getMessage()], 500);
         }
-    
-        // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
-        // return response()->json(['message' => 'Ouvrage non trouvé'], 404);
+    }
+    public function updateBrevetAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'DOI' => 'required|string|max:255',
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
+        ]);
+
+        try {
+            $brevet = Brevet::findOrFail($id);
+
+            $title = $request->input('title');
+            $DOI = $request->input('DOI');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs
+            $brevet->title = $title;
+            $brevet->author = implode(', ', $finalAuthorNames);
+            $brevet->doi = $DOI;
+            $brevet->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+            $brevet->status = 'approuvé';
+
+            $brevet->save();
+
+            return response()->json(['message' => 'Brevet mis à jour avec succès']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la mise à jour du brevet', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function getByUser($id_user)
@@ -123,4 +198,69 @@ class BrevetController extends Controller
 
         return response()->json($ouvrages);
     }
+    public function checkDOIExists(Request $request)
+    {
+        $doi = $request->input('doi');
+        $exists = Brevet::where('DOI', $doi)->exists(); // Revue est le modèle pour votre table des revues
+
+        return response()->json(['exists' => $exists]);
+    }
+    public function showUser($id)
+    {
+        $brevet = Brevet::find($id);
+        if ($brevet) {
+            // Séparez les auteurs avec et sans ID
+            $authorNames = explode(', ', $brevet->author);
+            $authorIds = explode(',', $brevet->id_user);
+
+            $authorsWithIds = [];
+            $authorsWithoutIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $authorsWithIds[] = $name;
+                } else {
+                    $authorsWithoutIds[] = $name;
+                }
+            }
+
+            return response()->json([
+                'title' => $brevet->title,
+                'doi' => $brevet->doi, // Assurez-vous que le champ est en minuscules pour correspondre au frontend
+                'authors_with_ids' => $authorsWithIds,
+                'author_ids' => $authorIds,
+                'authors_without_ids' => $authorsWithoutIds
+            ]);
+        } else {
+            return response()->json(['message' => 'Brevet not found'], 404);
+        }
+    }
+    public function rejectBrevet($id)
+    {
+        $brevet = Brevet::findOrFail($id);
+        $brevet->status = 'rejeté'; // Change le statut à 'rejeté'
+        $brevet->save();
+
+        return response()->json(['message' => 'Brevet rejeté avec succès!', 'brevet' => $brevet]);
+    }
+    public function getBrevetsEnAttente()
+    {
+        $brevets = Brevet::where('status', 'en attente')->get();
+        return response()->json($brevets);
+    }
+    public function getBrevetsAcceptes()
+    {
+        $brevets = Brevet::where('status', 'approuvé')->get();
+        return response()->json($brevets);
+    }
+
+    public function acceptBrevet($id)
+    {
+        $brevet = Brevet::findOrFail($id);
+        $brevet->status = 'approuvé'; // Change le statut à 'approuvé'
+        $brevet->save();
+
+        return response()->json(['message' => 'Brevet accepté avec succès!', 'brevet' => $brevet]);
+    }
+
 }
