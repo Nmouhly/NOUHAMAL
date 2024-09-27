@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\OuvrageController;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 // Routes accessibles sans authentification
+Route::post('/get-user-id', [UserController::class, 'getUserIdByEmail']);
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{id}', [NewsController::class, 'show']);
 Route::get('/members', [MemberController::class, 'index']);
@@ -38,11 +40,7 @@ Route::get('/axes', [AxeController::class, 'index']);
 Route::get('/presentations', [PresentationController::class, 'index']);
 Route::get('/home-descriptions', [HomeDescriptionController::class, 'index']);
 Route::get('/habilitations/{id}', [HabilitationController::class, 'show']);
-Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
-Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
-Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
-Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
-Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
+
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/seminar/ongoing', [SeminarController::class, 'ongoingSeminars']);
 Route::get('/seminar/completed', [SeminarController::class, 'completedSeminars']);
@@ -62,6 +60,13 @@ Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
 Route::get('/revues', [RevueController::class, 'index']);
 Route::get('/theses', [TheseController::class, 'index']);
 Route::get('/habilitations', [HabilitationController::class, 'index']);
+Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
+Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
+Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
+Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
+Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
+Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
 
 // Routes accessibles avec authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -80,10 +85,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //users 
-    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+   //message
+    Route::post('/messages', [MessageController::class, 'sendMessage']);
+    Route::get('/messages/received', [MessageController::class, 'getReceivedMessages']);
+    Route::get('/messages/sent', [MessageController::class, 'getSentMessages']);
+    Route::put('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+    Route::put('/messages/{id}/Notread', [MessageController::class, 'markAsNotRead']);
+    Route::get('/messages/{id}', [MessageController::class, 'show']);
+    
 
     //revue
-    Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
     Route::get('/revueUser/{id}', [RevueController::class, 'showUser']);
     Route::put('/revueUser/{id}', [RevueController::class, 'updateRevues']);
     Route::post('/revueUser', [RevueController::class, 'store']);
@@ -91,7 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkDOIExists', [RevueController::class, 'checkDOIExists']);
 
     //ouvrages 
-    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+   
     Route::get('/ouvrageUser/{id}', [OuvrageController::class, 'showUser']);
     Route::put('/ouvrageUser/{id}', [OuvrageController::class, 'updateOuvrage']);
     Route::post('/ouvragesUser', [OuvrageController::class, 'store']);
@@ -110,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Member routes
     Route::post('/members', [MemberController::class, 'store']);
+    Route::put('/member/{id}',[MemberController::class, 'updateMember'])->name('member.update');
     Route::put('/members/{id}', [MemberController::class, 'update']);
     Route::delete('/members/{id}', [MemberController::class, 'destroy']);
 
@@ -135,6 +147,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/revues/{id}', [RevueController::class, 'update']);
     Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
     Route::get('/revues/{id}', [RevueController::class, 'show']);
+    Route::get('/user/profil', [UserController::class, 'profil']);
+
+
+    
+    
 
     // Habilitation routes
     Route::post('/habilitations', [HabilitationController::class, 'store']);
@@ -190,6 +207,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/{id}', [ReportController::class, 'show']);
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{id}', [ReportController::class, 'update']);
+    
 
     //Axe
     Route::post('/axes', [AxeController::class, 'store']);
@@ -198,6 +216,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/axes/{id}', [AxeController::class, 'destroy']);
     // Admin dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+    Route::post('/auth/check', [UserController::class, 'checkCredentials']);
 
     // Authentication status
     Route::get('/checkingAuthenticated', function (Request $request) {

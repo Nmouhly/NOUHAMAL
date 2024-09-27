@@ -35,7 +35,6 @@ class ReportController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'summary' => 'nullable|string',
             'DOI' => 'required|string|max:255',
            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
         ]);
@@ -50,7 +49,6 @@ class ReportController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'summary' => 'nullable|string',
            'DOI' => 'required|string|max:255',
             'id_user' => 'string|max:255', 
         ]);

@@ -5,7 +5,7 @@ use App\Revue;
 use App\Ouvrage;
 use App\Project;
 use App\Report;
-use App\Patent;
+use App\Brevet;
 use App\Conference;
 use App\Seminar;
 use App\Member;
@@ -32,7 +32,7 @@ class StatisticsController extends Controller
         \Log::info("Nombre de rapports : " . $rapportsCount);
 
         // Comptez le nombre de brevets
-        $brevetsCount = Patent::count();
+        $brevetsCount = Brevet::count();
         \Log::info("Nombre de brevets : " . $brevetsCount);
 
         // Comptez le nombre de conférences

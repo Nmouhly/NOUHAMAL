@@ -9,7 +9,7 @@ class HomeDescriptionController extends Controller
     public function index()
     {
         // Récupérer toutes les descriptions
-        $descriptions = HomeDescription::all();
+        $descriptions= HomeDescription::latest()->first();
         return response()->json($descriptions);
     }
 

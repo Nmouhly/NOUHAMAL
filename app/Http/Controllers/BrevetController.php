@@ -54,7 +54,7 @@ class BrevetController extends Controller
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'DOI' => 'required|string|max:255',
+            'doi' => 'required|string|max:255',
             'id_user' => 'string|max:255', 
         ]);
     

@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Support\Facades\Hash;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 use App\User;
 use App\Member; // Utilisez App\Models\User au lieu de App\User si vous utilisez Laravel 8+
 use Illuminate\Http\Request;
@@ -71,6 +72,7 @@ class UserController extends Controller
         'bio' => $request->input('bio', ''), // Valeur par défaut vide si non fourni
     ]);
 
+    // if($user){$user->notify(new ActionNotification());}
     // Retourner une réponse de succès
     return response()->json([
         'message' => 'Utilisateur créé avec succès.',
@@ -93,7 +95,16 @@ public function auth(Request $request)
             'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
         ], 401);
     }
+     // Vérifier si c'est la première connexion
+     if ($user->first_login) {
+        // Envoyer l'e-mail de bienvenue
+       
+        Mail::to($user->email)->send(new WelcomeEMail($user->name));
 
+        // Mettre à jour le champ first_login
+        $user->first_login = false;
+        $user->save();
+    }
     
 
     if ($user->role === 1) {
@@ -130,6 +141,61 @@ public function auth(Request $request)
         ]);
     }
 
+    public function profil(Request $request)
+    {
+        // Récupère l'utilisateur actuellement authentifié via le token
+        $user = Auth::user();
+
+        // Retourner les infos de l'utilisateur en JSON
+        return response()->json([
+            'user' => $user
+        ], 200);
+    }
+    public function getUserIdByEmail(Request $request)
+    {
+        // Validation de l'email
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+    
+        // Rechercher l'utilisateur par email
+        $user = User::where('email', $request->input('email'))->first();
+    
+        // Vérifier si l'utilisateur existe
+        if (!$user) {
+            return response()->json([
+                'user_id' => null,
+                'message' => 'Utilisateur non trouvé.'
+            ]);
+        }
+    
+        // Retourner l'ID de l'utilisateur
+        return response()->json([
+            'user_id' => $user->id
+        ]);
+    }
+    
+
+    public function checkCredentials(Request $request)
+    {
+        // Validation des entrées
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        // Récupérer l'utilisateur actuellement authentifié
+        $user = Auth::user();
+
+        // Vérifier si l'email et le mot de passe correspondent
+        if ($user && $user->email === $request->email && Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Credentials are valid'], 200);
+        } else {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+    }
+
+
     // CRUD Functions
     public function index()
     {
@@ -153,6 +219,7 @@ public function auth(Request $request)
     $validator = Validator::make($request->all(), [
         'name' => 'required|string|max:255',
         'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'password' => 'sometimes|required|string|min:8',
     ]);
 
     if ($validator->fails()) {
@@ -168,6 +235,8 @@ public function auth(Request $request)
     $user->update([
         'name' => $request->input('name'),
         'email' => $request->input('email'),
+        'password' => $request->has('password') ? Hash::make($request->password) : $user->password,
+
     ]);
 
     return response()->json(['message' => 'Utilisateur mis à jour avec succès', 'user' => $user], 200);
