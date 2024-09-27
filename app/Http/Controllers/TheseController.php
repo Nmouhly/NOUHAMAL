@@ -33,9 +33,11 @@ class TheseController extends Controller
             'id_user' => 'required|string',
             'lieu' => 'nullable|string|max:255',
             'date' => 'nullable|date',
+
         ]);
 
         try {
+            // Utilisation du modèle 'These'
             $these = These::create([
                 'title' => $validatedData['title'],
                 'author' => $validatedData['author'],
@@ -43,6 +45,8 @@ class TheseController extends Controller
                 'id_user' => $validatedData['id_user'],
                 'lieu' => $validatedData['lieu'],
                 'date' => $validatedData['date'],
+                'status' => 'en attente', // Statut par défaut
+
             ]);
 
             return response()->json($these, 201);
@@ -50,6 +54,38 @@ class TheseController extends Controller
             return response()->json(['error' => 'Erreur lors de l\'ajout de la thèse'], 500);
         }
     }
+    public function storeAdmin(Request $request)
+    {
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string',
+            'doi' => 'nullable|string|max:255',
+            'id_user' => 'required|string',
+            'lieu' => 'nullable|string|max:255',
+            'date' => 'nullable|date',
+
+        ]);
+
+        try {
+            // Utilisation du modèle 'These'
+            $these = These::create([
+                'title' => $validatedData['title'],
+                'author' => $validatedData['author'],
+                'doi' => $validatedData['doi'],
+                'id_user' => $validatedData['id_user'],
+                'lieu' => $validatedData['lieu'],
+                'date' => $validatedData['date'],
+                'status' => 'approuvé', // Statut par défaut
+
+            ]);
+
+            return response()->json($these, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de l\'ajout de la thèse'], 500);
+        }
+    }
+
+
     /**
      * Display the specified thesis.
      *
@@ -94,27 +130,6 @@ class TheseController extends Controller
     //     $thesis->update($request->all());
     //     return response()->json($thesis);
     // }
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-           'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'doi' => 'required|string|max:255',
-            'id_user' => 'required|exists:users,id',
-            'lieu' => 'required|string|max:255',
-            'date' => 'required|date',
-        ]);
-
-        $rapport = These::find($id);
-
-        if ($rapport) {
-            $rapport->update($request->all());
-            return response()->json($rapport);
-        }
-
-        return response()->json(['message' => 'Report non trouvé'], 404);
-    }
-
 
     /**
      * Remove the specified thesis from storage.
@@ -150,4 +165,193 @@ class TheseController extends Controller
 
         return response()->json($theses);
     }
+    public function checkDOIExists(Request $request)
+    {
+        $doi = $request->input('doi');
+        $exists = These::where('DOI', $doi)->exists(); // Revue est le modèle pour votre table des revues
+
+        return response()->json(['exists' => $exists]);
+    }
+    public function showUser($id)
+    {
+        $thesis = These::find($id);
+        if ($thesis) {
+            // Séparez les auteurs avec et sans ID
+            $authorNames = explode(', ', $thesis->author);
+            $authorIds = explode(',', $thesis->id_user);
+
+            $authorsWithIds = [];
+            $authorsWithoutIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $authorsWithIds[] = $name;
+                } else {
+                    $authorsWithoutIds[] = $name;
+                }
+            }
+
+            return response()->json([
+                'title' => $thesis->title,
+                'doi' => $thesis->doi, // Assurez-vous que le champ est en minuscules pour correspondre au frontend
+                'authors_with_ids' => $authorsWithIds,
+                'author_ids' => $authorIds,
+                'authors_without_ids' => $authorsWithoutIds,
+                'date' => $thesis->date, // Ajoutez d'autres attributs si nécessaire
+                'lieu' => $thesis->lieu, // Ajoutez d'autres attributs si nécessaire
+            ]);
+        } else {
+            return response()->json(['message' => 'Thesis not found'], 404);
+        }
+    }
+
+
+
+    public function updateThese(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'doi' => 'required|string|max:255',  // Ensure 'doi' is lowercase
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
+            'lieu' => 'required|string|max:255', // Lieu de soutenance
+            'date' => 'required|date', // Date de soutenance
+        ]);
+
+
+        try {
+            $these = These::findOrFail($id);
+
+            // Récupérer les champs du formulaire
+            $title = $request->input('title');
+            $doi = $request->input('doi');  // Assurez-vous d'utiliser 'doi' en minuscule
+            $lieu = $request->input('lieu');
+            $date = $request->input('date');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs de la thèse
+            $these->title = $title;
+            $these->author = implode(', ', $finalAuthorNames);
+            $these->doi = $doi;  // Assurez-vous d'utiliser 'doi' en minuscule
+            $these->id_user = implode(',', $finalAuthorIds); // S'assurer que les IDs sont corrects
+            $these->lieu = $lieu;
+            $these->date = $date;
+            $these->status = 'en attente';
+
+            // Sauvegarder les modifications
+            $these->save();
+
+            return response()->json(['message' => 'Thèse mise à jour avec succès']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la mise à jour de la thèse', 'error' => $e->getMessage()], 500);
+        }
+    }
+    public function updateTheseAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'doi' => 'required|string|max:255',  // Ensure 'doi' is lowercase
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
+            'lieu' => 'required|string|max:255', // Lieu de soutenance
+            'date' => 'required|date', // Date de soutenance
+        ]);
+
+
+        try {
+            $these = These::findOrFail($id);
+
+            // Récupérer les champs du formulaire
+            $title = $request->input('title');
+            $doi = $request->input('doi');  // Assurez-vous d'utiliser 'doi' en minuscule
+            $lieu = $request->input('lieu');
+            $date = $request->input('date');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs de la thèse
+            $these->title = $title;
+            $these->author = implode(', ', $finalAuthorNames);
+            $these->doi = $doi;  // Assurez-vous d'utiliser 'doi' en minuscule
+            $these->id_user = implode(',', $finalAuthorIds); // S'assurer que les IDs sont corrects
+            $these->lieu = $lieu;
+            $these->date = $date;
+            $these->status = 'approuvé';
+
+            // Sauvegarder les modifications
+            $these->save();
+
+            return response()->json(['message' => 'Thèse mise à jour avec succès']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la mise à jour de la thèse', 'error' => $e->getMessage()], 500);
+        }
+    }
+    public function rejectThesis($id)
+    {
+        $thesis = These::findOrFail($id);
+        $thesis->status = 'rejeté'; // Change status to 'rejeté'
+        $thesis->save();
+
+        return response()->json(['message' => 'Thèse rejetée avec succès!', 'thesis' => $thesis]);
+    }
+
+    public function getPendingTheses()
+    {
+        $theses = These::where('status', 'en attente')->get();
+        return response()->json($theses);
+    }
+
+    public function getAcceptedTheses()
+    {
+        $theses = These::where('status', 'approuvé')->get();
+        return response()->json($theses);
+    }
+
+    public function acceptThesis($id)
+    {
+        $thesis = These::findOrFail($id);
+        $thesis->status = 'approuvé'; // Change status to 'approuvé'
+        $thesis->save();
+
+        return response()->json(['message' => 'Thèse acceptée avec succès!', 'thesis' => $thesis]);
+    }
+
+
 }

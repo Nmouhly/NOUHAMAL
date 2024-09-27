@@ -52,21 +52,51 @@ class RevueController extends Controller
     }
 
 
-    public function store(Request $request)
+    public function storeUser(Request $request)
     {
-        // Valide les données
-        $validatedData = $request->validate([
+        // Valider les données du formulaire
+        $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
             'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
         ]);
 
-        // Crée une nouvelle revue
-        $revue = Revue::create($validatedData);
+        // Créer un nouvel ouvrage avec le statut "en attente"
+        $ouvrage = Revue::create([
+            'title' => $request->title,
+            'author' => $request->author,
+            'DOI' => $request->DOI,
+            'id_user' => $request->id_user,
+            'status' => 'en attente', // Statut par défaut
+        ]);
 
-        return response()->json($revue, 201);
+        // Retourner une réponse JSON avec un message de succès
+        return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
     }
+    public function storeAdmin(Request $request)
+    {
+        // Valider les données du formulaire
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'DOI' => 'required|string|max:255',
+            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+        ]);
+
+        // Créer un nouvel ouvrage avec le statut "en attente"
+        $ouvrage = Revue::create([
+            'title' => $request->title,
+            'author' => $request->author,
+            'DOI' => $request->DOI,
+            'id_user' => $request->id_user,
+            'status' => 'approuvé', // Statut par défaut
+        ]);
+
+        // Retourner une réponse JSON avec un message de succès
+        return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
+    }
+
 
     public function show($id)
     {
@@ -91,7 +121,7 @@ class RevueController extends Controller
         ]);
 
         try {
-            $brevet = Revue::findOrFail($id);
+            $revue = Revue::findOrFail($id);
 
             $title = $request->input('title');
             $DOI = $request->input('DOI');
@@ -115,42 +145,72 @@ class RevueController extends Controller
             }
 
             // Mettre à jour les valeurs
-            $brevet->title = $title;
-            $brevet->author = implode(', ', $finalAuthorNames);
-            $brevet->DOI = $DOI;
-            $brevet->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+            $revue->title = $title;
+            $revue->author = implode(', ', $finalAuthorNames);
+            $revue->DOI = $DOI;
+            $revue->id_user = implode(',', $finalAuthorIds);
 
-            $brevet->save();
+            // Mettre le statut à "en attente" lors de la modification
+            $revue->status = 'en attente';
 
-            return response()->json(['message' => 'Revue updated successfully']);
+            $revue->save();
+
+            return response()->json(['message' => 'Revue mise à jour avec succès']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error updating revue', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erreur lors de la mise à jour de la revue', 'error' => $e->getMessage()], 500);
         }
     }
-
-
-    public function update(Request $request, $id)
+    public function updateRevuesAdmin(Request $request, $id)
     {
-        // Valide les données
-        $validatedData = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255',
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
         ]);
 
-        // Trouve la revue par ID
-        $revue = Revue::find($id);
+        try {
+            $revue = Revue::findOrFail($id);
 
-        if ($revue) {
-            // Met à jour la revue
-            $revue->update($validatedData);
+            $title = $request->input('title');
+            $DOI = $request->input('DOI');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
 
-            return response()->json($revue);
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs
+            $revue->title = $title;
+            $revue->author = implode(', ', $finalAuthorNames);
+            $revue->DOI = $DOI;
+            $revue->id_user = implode(',', $finalAuthorIds);
+
+            $revue->status = 'approuvé';
+
+            $revue->save();
+
+            return response()->json(['message' => 'Revue mise à jour avec succès']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la mise à jour de la revue', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'Revue non trouvée'], 404);
     }
+
 
     public function destroy($id)
     {
@@ -176,6 +236,39 @@ class RevueController extends Controller
 
         return response()->json(['exists' => $exists]);
     }
+    // Méthode pour accepter une revue
+    public function acceptRevue($id)
+    {
+        $revue = Revue::findOrFail($id);
+        $revue->status = 'approuvé'; // Change le statut à 'approuvé'
+        $revue->save();
 
+        return response()->json(['message' => 'Revue acceptée avec succès!', 'revue' => $revue]);
+    }
+
+    // Méthode pour rejeter une revue
+    public function rejectRevue($id)
+    {
+        $revue = Revue::findOrFail($id);
+        $revue->status = 'rejeté'; // Change status to 'rejeté'
+        $revue->save();
+
+        return response()->json(['message' => 'Revue rejetée avec succès!', 'revues' => $revue]);
+    }
+
+    public function getRevuesEnAttente()
+    {
+        $revues = Revue::where('status', 'en attente')->get();
+        return response()->json($revues);
+    }
+
+    public function getRevuesAcceptes()
+    {
+        // Récupérer les revues avec le statut 'approuvé'
+        $revues = Revue::where('status', 'approuvé')->get();
+
+        // Retourner les revues acceptées en JSON
+        return response()->json($revues);
+    }
 
 }

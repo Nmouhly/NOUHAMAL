@@ -6,11 +6,7 @@ use Illuminate\Http\Request;
 
 class OuvrageController extends Controller
 {
-    public function index()
-    {
-        $ouvrages = Ouvrage::all();
-        return response()->json($ouvrages);
-    }
+
     public function showUser($id)
     {
         $ouvrage = Ouvrage::find($id);
@@ -42,25 +38,6 @@ class OuvrageController extends Controller
         }
     }
 
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'title' => 'required|string|max:255',
-    //         'author' => 'required|string|max:255',
-    //         'pdf_link' => 'nullable|url',
-
-    //     ]);
-
-
-    //     $ouvrage = Ouvrage::create([
-    //         'title' => $request->title,
-    //         'author' => $request->author,
-    //         'pdf_link' => $request->pdf_link,
-
-    //     ]);
-
-    //     return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
-    // }
     public function store(Request $request)
     {
         // Valider les données du formulaire
@@ -71,41 +48,43 @@ class OuvrageController extends Controller
             'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
         ]);
 
-        // Créer un nouvel ouvrage avec les données validées
+        // Créer un nouvel ouvrage avec les données validées, en définissant le statut par défaut
         $ouvrage = Ouvrage::create([
             'title' => $request->title,
             'author' => $request->author,
             'DOI' => $request->DOI,
             'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+            'status' => 'approuvé', // Définit le statut par défaut sur "pending"
         ]);
 
         // Retourner une réponse JSON avec un message de succès
         return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
     }
 
+    public function storeUser(Request $request)
+    {
+        // Valider les données du formulaire
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+            'DOI' => 'required|string|max:255',
+            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+        ]);
+
+        // Créer un nouvel ouvrage avec le statut "en attente"
+        $ouvrage = Ouvrage::create([
+            'title' => $request->title,
+            'author' => $request->author,
+            'DOI' => $request->DOI,
+            'id_user' => $request->id_user,
+            'status' => 'en attente', // Statut par défaut
+        ]);
+
+        // Retourner une réponse JSON avec un message de succès
+        return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
+    }
 
 
-    // public function update(Request $request, $id)
-    // {
-    //     // Valider les données de la requête
-    //     $validatedData = $request->validate([
-    //         'title' => 'required|string|max:255',
-    //         'author' => 'required|string|max:255',
-    //         'pdf_link' => 'nullable|url',
-    //     ]);
-
-    //     // Trouver l'ouvrage par son ID
-    //     $ouvrage = Ouvrage::find($id);
-
-    //     if ($ouvrage) {
-    //         // Mettre à jour l'ouvrage avec les données validées
-    //         $ouvrage->update($validatedData);
-    //         return response()->json($ouvrage);
-    //     }
-
-    //     // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
-    //     return response()->json(['message' => 'Ouvrage non trouvé'], 404);
-    // }
     public function getOuvragesByUserOrContributor($id_user)
     {
         // Récupérer les ouvrages où id_user est l'utilisateur ou où il est dans une chaîne de IDs (contributeurs)
@@ -155,6 +134,7 @@ class OuvrageController extends Controller
             $ouvrage->author = implode(', ', $finalAuthorNames);
             $ouvrage->DOI = $DOI;
             $ouvrage->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+            $ouvrage->status = 'en attente';
 
             $ouvrage->save();
 
@@ -163,28 +143,57 @@ class OuvrageController extends Controller
             return response()->json(['message' => 'Error updating ouvrage', 'error' => $e->getMessage()], 500);
         }
     }
-    public function update(Request $request, $id)
+    public function updateOuvrageAdmin(Request $request, $id)
     {
-        // Valider les données de la requête
-        $validatedData = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255',
+            'current_user_id' => 'required|integer',
+            'author_names' => 'array',
+            'id_user' => 'string', // IDs des auteurs
+            'optional_authors' => 'array',
         ]);
 
-        // Trouver l'ouvrage par son ID
-        $ouvrage = Ouvrage::find($id);
+        try {
+            $ouvrage = Ouvrage::findOrFail($id);
 
-        if ($ouvrage) {
-            // Mettre à jour l'ouvrage avec les données validées
-            $ouvrage->update($validatedData);
-            return response()->json($ouvrage);
+            $title = $request->input('title');
+            $DOI = $request->input('DOI');
+            $authorNames = $request->input('author_names', []);
+            $authorIds = explode(',', $request->input('id_user', '')); // IDs des auteurs
+            $optionalAuthors = $request->input('optional_authors', []);
+
+            // Préparer les auteurs et IDs
+            $finalAuthorNames = [];
+            $finalAuthorIds = [];
+
+            foreach ($authorNames as $index => $name) {
+                // Vérifier si l'ID existe pour cet auteur
+                if (isset($authorIds[$index]) && !empty($authorIds[$index])) {
+                    $finalAuthorNames[] = $name;
+                    $finalAuthorIds[] = $authorIds[$index];
+                } else {
+                    // Ajouter les noms sans ID
+                    $finalAuthorNames[] = $name;
+                }
+            }
+
+            // Mettre à jour les valeurs
+            $ouvrage->title = $title;
+            $ouvrage->author = implode(', ', $finalAuthorNames);
+            $ouvrage->DOI = $DOI;
+            $ouvrage->id_user = implode(',', $finalAuthorIds); // Assurez-vous que les IDs sont corrects
+            $ouvrage->status = 'approuvé';
+
+            $ouvrage->save();
+
+            return response()->json(['message' => 'Ouvrage updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating ouvrage', 'error' => $e->getMessage()], 500);
         }
-
-        // Retourner une réponse d'erreur si l'ouvrage n'est pas trouvé
-        return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
+
+
     public function getByUser($id_user)
     {
         // Récupérer les ouvrages associés à l'id_user spécifié
@@ -210,5 +219,55 @@ class OuvrageController extends Controller
 
         return response()->json(['exists' => $exists]);
     }
+
+
+    public function acceptOuvrage($id)
+    {
+        $ouvrage = Ouvrage::findOrFail($id);
+        $ouvrage->status = 'approuvé'; // Change le statut à 'approuvé'
+        $ouvrage->save();
+
+        return response()->json(['message' => 'Ouvrage accepté avec succès!', 'ouvrage' => $ouvrage]);
+    }
+
+
+
+
+    // Méthode pour rejeter un ouvrage
+    public function rejectOuvrage($id)
+    {
+        $ouvrage = Ouvrage::findOrFail($id);
+        $ouvrage->status = 'rejeté'; // Change status to 'rejeté'
+        $ouvrage->save();
+
+        return response()->json(['message' => 'Ouvrage rejetée avec succès!', 'ouvrages' => $ouvrage]);
+    }
+
+
+    public function getPublicationsEnAttente()
+    {
+        $ouvrages = Ouvrage::where('status', 'en attente')->get();
+        return response()->json($ouvrages);
+    }
+
+    public function getOuvragesByAdminOrContributor($id_user)
+    {
+        // Récupérer les ouvrages où l'utilisateur est soit l'auteur principal soit contributeur
+        $ouvrages = Ouvrage::where('id_user', $id_user)
+            ->orWhere('author_ids', 'like', '%' . $id_user . '%') // Assurez-vous que 'author_ids' est une chaîne contenant les ID des contributeurs.
+            ->get();
+
+        return response()->json($ouvrages);
+    }
+
+    public function getOuvragesAcceptes()
+    {
+        // Récupérer les ouvrages avec le statut 'accepté'
+        $ouvrages = Ouvrage::where('status', 'approuvé')->get();
+
+        // Retourner les ouvrages acceptés en JSON
+        return response()->json($ouvrages);
+    }
+
 
 }

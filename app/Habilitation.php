@@ -16,5 +16,6 @@ class Habilitation extends Model
         'id_user',
         'lieu',
         'date',
+        'status',
     ];
 }

@@ -16,6 +16,8 @@ class These extends Model
         'id_user',
         'lieu',
         'date',
+        'status',
+
     ];
 
     // Si vous utilisez une clé primaire non incrémentée, vous pouvez définir:

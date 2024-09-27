@@ -12,8 +12,10 @@ class Revue extends Model
         'author',
         'DOI',
         'id_user',
+        'status',
+
     ];
 
     // Définissez les règles de validation des attributs de date, si nécessaire
-  
+
 }

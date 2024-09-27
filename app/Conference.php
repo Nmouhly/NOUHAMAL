@@ -9,12 +9,8 @@ class Conference extends Model
     protected $table = 'conferences';
     protected $fillable = [
         'title',
-        'authors',
-        'paper_title',
-        'conference_name',
         'date',
         'location',
-        'reference',
         'image',
     ];
 

@@ -12,11 +12,14 @@ class Ouvrage extends Model
         'author',
         'DOI',
         'id_user',
-       
+        'status',
+
+
     ];
     // public function member()
     // {
     //     return $this->belongsTo(Member::class, 'id_user', 'user_id');
     // }
+
 }
 

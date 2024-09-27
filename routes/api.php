@@ -28,7 +28,6 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{id}', [NewsController::class, 'show']);
 Route::get('/members', [MemberController::class, 'index']);
-Route::get('/members/{id}', [MemberController::class, 'show']);
 Route::get('members/user/{userId}', [MemberController::class, 'getByUserId']);
 Route::get('/seminars', [SeminarController::class, 'index']);
 Route::get('/seminars/{id}', [SeminarController::class, 'show']);
@@ -49,7 +48,6 @@ Route::get('/seminar/completed', [SeminarController::class, 'completedSeminars']
 Route::get('/projects/ongoing', [ProjectController::class, 'ongoingProjects']);
 Route::get('/projects/completed', [ProjectController::class, 'completedProjects']);
 Route::get('/projects/{id}', [ProjectController::class, 'show']);
-Route::get('ouvrages', [OuvrageController::class, 'index']);
 Route::get('reports', [ReportController::class, 'index']);
 Route::get('/reports/{id}', [ReportController::class, 'show']);
 Route::get('conferences', [ConferenceController::class, 'index']);
@@ -62,6 +60,12 @@ Route::get('job-offers/{id}', [JobOfferController::class, 'show']);
 Route::get('/revues', [RevueController::class, 'index']);
 Route::get('/theses', [TheseController::class, 'index']);
 Route::get('/habilitations', [HabilitationController::class, 'index']);
+Route::get('/ouvrages/acceptes', [OuvrageController::class, 'getOuvragesAcceptes']);
+Route::get('/revues/acceptes', [RevueController::class, 'getRevuesAcceptes']);
+Route::get('/brevets/acceptes', [Brevetcontroller::class, 'getBrevetsAcceptes']);
+Route::get('/reportes/acceptes', [Reportcontroller::class, 'getReportsAcceptes']);
+Route::get('/these/acceptes', [Thesecontroller::class, 'getAcceptedTheses']);
+Route::get('/habilitation/acceptes', [Habilitationcontroller::class, 'getAcceptedHabilitations']);
 
 // Routes accessibles avec authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -79,14 +83,16 @@ Route::middleware('auth:sanctum')->group(function () {
         ];
     });
 
-    //users 
+    //test 
+    Route::get('/members/{id}', [MemberController::class, 'show']);
     Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+
 
     //revue
     Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
     Route::get('/revueUser/{id}', [RevueController::class, 'showUser']);
     Route::put('/revueUser/{id}', [RevueController::class, 'updateRevues']);
-    Route::post('/revueUser', [RevueController::class, 'store']);
+    Route::post('/revueUser', [RevueController::class, 'storeUser']);
     Route::delete('/revuesUser/{id}', [RevueController::class, 'destroy']);
     Route::post('/checkDOIExists', [RevueController::class, 'checkDOIExists']);
 
@@ -94,14 +100,56 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
     Route::get('/ouvrageUser/{id}', [OuvrageController::class, 'showUser']);
     Route::put('/ouvrageUser/{id}', [OuvrageController::class, 'updateOuvrage']);
-    Route::post('/ouvragesUser', [OuvrageController::class, 'store']);
+    Route::post('/ouvragesUser', [OuvrageController::class, 'storeUser']);
     Route::delete('/ouvragesUser/{id}', [OuvrageController::class, 'destroy']);
     Route::post('/checkDOIExists', [OuvrageController::class, 'checkDOIExists']);
 
+    //brevets 
+    Route::get('/brevetUser/{id}', [BrevetController::class, 'showUser']);
+    Route::put('/brevetUser/{id}', [BrevetController::class, 'updateBrevet']);
+    Route::delete('/brevetUser/{id}', [BrevetController::class, 'destroy']);
+    Route::post('/checkDOIExists', [OuvrageController::class, 'checkDOIExists']);
+    Route::post('/brevetUser', [BrevetController::class, 'storeUser']);
+
+    //rapport
+    Route::get('/rapportUser/{id}', [ReportController::class, 'showUser']);
+    Route::put('/rapportUser/{id}', [ReportController::class, 'updateRapport']);
+    Route::delete('/rapportUser/{id}', [ReportController::class, 'destroy']);
+    Route::post('/checkDOIExists', [ReportController::class, 'checkDOIExists']);
+    Route::post('/rapportUser', [ReportController::class, 'store']);
 
 
 
 
+    //thèses et doctorat 
+    Route::post('/checkDOIExists', [TheseController::class, 'checkDOIExists']);
+    Route::delete('/thesesUser/{id}', [TheseController::class, 'destroy']);
+    Route::post('/thesesUser', [TheseController::class, 'store']);
+    Route::get('/thesesUser/{id}', [TheseController::class, 'showUser']);
+    Route::put('/thesesUser/{id}', [TheseController::class, 'updateThese']);
+
+    //habilitations
+    Route::post('/habilitationsUser', [HabilitationController::class, 'store']);
+    Route::delete('/habilitationsUser/{id}', [HabilitationController::class, 'destroy']);
+    Route::get('/habilitationsUser/{id}', [HabilitationController::class, 'showUser']);
+    Route::put('/habilitationsUser/{id}', [HabilitationController::class, 'updateHabilitation']);
+    Route::post('/checkDOIExists', [HabilitationController::class, 'checkDOIExists']);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //Admin
 
     // News routes
     Route::post('/news', [NewsController::class, 'store']);
@@ -125,34 +173,75 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/seminars/{id}', [SeminarController::class, 'destroy']);
 
     // Ouvrage routes
+    Route::get('/ouvragesAdmin', [OuvrageController::class, 'getOuvragesAcceptes']);
     Route::post('/ouvrages', [OuvrageController::class, 'store']);
-    Route::put('/ouvrages/{id}', [OuvrageController::class, 'update']);
+    Route::put('/ouvrages/{id}', [OuvrageController::class, 'updateOuvrageAdmin']);
     Route::delete('/ouvrages/{id}', [OuvrageController::class, 'destroy']);
-    Route::get('/ouvrages/{id}', [OuvrageController::class, 'show']);
+    Route::get('/ouvrages/{id}', [OuvrageController::class, 'showUser']);
+    Route::post('/checkDOIExistsAdmin', [OuvrageController::class, 'checkDOIExists']);
+    Route::get('/ouvrages', [OuvrageController::class, 'getPublicationsEnAttente']);
+    Route::post('/ouvrages/accept/{id}', [OuvrageController::class, 'acceptOuvrage']);
+    Route::post('/ouvrages/reject/{id}', [OuvrageController::class, 'rejectOuvrage']);
 
     // Revue routes
-    Route::post('/revues', [RevueController::class, 'store']);
-    Route::put('/revues/{id}', [RevueController::class, 'update']);
+    Route::get('/revuesAdmin', [RevueController::class, 'getRevuesAcceptes']);
+    Route::post('/revues', [RevueController::class, 'storeAdmin']);
     Route::delete('/revues/{id}', [RevueController::class, 'destroy']);
-    Route::get('/revues/{id}', [RevueController::class, 'show']);
+    Route::put('/revues/{id}', [RevueController::class, 'updateRevuesAdmin']);
+    Route::get('/revues/{id}', [RevueController::class, 'showUser']);
+    Route::post('/checkDOIExistsAdmin', [RevueController::class, 'checkDOIExists']);
+    Route::get('/revues', [RevueController::class, 'getRevuesEnAttente']);
+    Route::post('/revues/accept/{id}', [RevueController::class, 'acceptRevue']);
+    Route::post('/revues/reject/{id}', [RevueController::class, 'rejectRevue']);
 
-    // Habilitation routes
-    Route::post('/habilitations', [HabilitationController::class, 'store']);
-    Route::put('/habilitations/{id}', [HabilitationController::class, 'update']);
-    Route::delete('/habilitations/{id}', [HabilitationController::class, 'destroy']);
-    Route::get('/habilitations/{id}', [HabilitationController::class, 'show']);
 
     // Brevet routes
     Route::post('/brevets', [BrevetController::class, 'store']);
-    Route::put('/brevets/{id}', [BrevetController::class, 'update']);
+    Route::put('/brevets/{id}', [BrevetController::class, 'updateBrevetAdmin']);
     Route::delete('/brevets/{id}', [BrevetController::class, 'destroy']);
-    Route::get('/brevets/{id}', [BrevetController::class, 'show']);
+    Route::get('/brevets/{id}', [BrevetController::class, 'showUser']);
+    Route::get('/brevetsAdmin', [BrevetController::class, 'getBrevetsAcceptes']);
+    Route::post('/checkDOIExistsAdmin', [RevueController::class, 'checkDOIExists']);
+    Route::get('/brevets', [BrevetController::class, 'getBrevetsEnAttente']);
+    Route::post('/brevets/accept/{id}', [BrevetController::class, 'acceptBrevet']);
+    Route::post('/brevets/reject/{id}', [BrevetController::class, 'rejectBrevet']);
+
+    //repots
+    Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+    Route::get('/reports/{id}', [ReportController::class, 'showUser']);
+    Route::post('/reports', [ReportController::class, 'storeAdmin']);
+    Route::put('/reports/{id}', [ReportController::class, 'updateRapportAdmin']);
+    Route::get('/reportsAdmin', [ReportController::class, 'getReportsAcceptes']);
+    Route::post('/checkDOIExistsAdmin', [ReportController::class, 'checkDOIExists']);
+    Route::get('/reports', [ReportController::class, 'getReportsEnAttente']);
+    Route::post('/reports/accept/{id}', [ReportController::class, 'acceptReport']);
+    Route::post('/reports/reject/{id}', [ReportController::class, 'rejectReport']);
 
     // These routes
-    Route::post('/theses', [TheseController::class, 'store']);
-    Route::put('/theses/{id}', [TheseController::class, 'update']);
+    Route::post('/theses', [TheseController::class, 'storeAdmin']);
+    Route::put('/theses/{id}', [TheseController::class, 'updateTheseAdmin']);
     Route::delete('/theses/{id}', [TheseController::class, 'destroy']);
-    Route::get('/theses/{id}', [TheseController::class, 'show']);
+    Route::get('/theses/{id}', [TheseController::class, 'showUser']);
+    Route::get('/thesesAdmin', [TheseController::class, 'getPendingTheses']);
+    Route::post('/checkDOIExistsAdmin', [TheseController::class, 'checkDOIExists']);
+    Route::get('/theseAdmin', [TheseController::class, 'getAcceptedTheses']);
+    Route::post('/theses/accept/{id}', [TheseController::class, 'acceptThesis']);
+    Route::post('/theses/reject/{id}', [TheseController::class, 'rejectThesis']);
+
+
+
+    // Habilitation routes
+    Route::post('/habilitations', [HabilitationController::class, 'storeAdmin']);
+    Route::put('/habilitations/{id}', [HabilitationController::class, 'updateHabilitationAdmin']);
+    Route::delete('/habilitations/{id}', [HabilitationController::class, 'destroy']);
+    Route::get('/habilitations/{id}', [HabilitationController::class, 'show']);
+    Route::get('/habilitationnAdmin', [HabilitationController::class, 'getPendingHabilitations']);
+    Route::post('/checkDOIExistsAdmin', [HabilitationController::class, 'checkDOIExists']);
+    Route::get('/habilitationAdmin', [HabilitationController::class, 'getAcceptedHabilitations']);
+    Route::post('/habilitations/accept/{id}', [HabilitationController::class, 'acceptHabilitation']);
+    Route::post('/habilitations/reject/{id}', [HabilitationController::class, 'rejectHabilitation']);
+
+
 
 
     // Job Offer routes
@@ -165,11 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 
-    // Patent routes
-    Route::post('/patents', [PatentController::class, 'store']);
-    Route::put('/patents/{id}', [PatentController::class, 'update']);
-    Route::delete('/patents/{id}', [PatentController::class, 'destroy']);
-    Route::get('/patents/{id}', [PatentController::class, 'show']);
+
     //description
     Route::post('home-descriptions', [HomeDescriptionController::class, 'store']);
     Route::put('home-descriptions/{id}', [HomeDescriptionController::class, 'update']);
@@ -185,11 +270,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/conferences/{id}', [ConferenceController::class, 'destroy']);
     Route::get('/conferences/{id}', [ConferenceController::class, 'show']);
     Route::put('/conferences/{id}', [ConferenceController::class, 'update']);
-    //repots
-    Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
-    Route::get('/reports/{id}', [ReportController::class, 'show']);
-    Route::post('/reports', [ReportController::class, 'store']);
-    Route::put('/reports/{id}', [ReportController::class, 'update']);
+
 
     //Axe
     Route::post('/axes', [AxeController::class, 'store']);
