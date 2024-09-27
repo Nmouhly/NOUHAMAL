@@ -68,7 +68,6 @@ class BrevetController extends Controller
         return response()->json(['message' => 'Brevet non trouvé'], 404);
     }
 
-
     // Mettre à jour un brevet existant
     public function updateBrevet(Request $request, $id)
     {

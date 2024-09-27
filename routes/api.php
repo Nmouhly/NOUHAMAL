@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\OuvrageController;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 // Routes accessibles sans authentification
+Route::post('/get-user-id', [UserController::class, 'getUserIdByEmail']);
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{id}', [NewsController::class, 'show']);
 Route::get('/members', [MemberController::class, 'index']);
@@ -37,11 +39,7 @@ Route::get('/axes', [AxeController::class, 'index']);
 Route::get('/presentations', [PresentationController::class, 'index']);
 Route::get('/home-descriptions', [HomeDescriptionController::class, 'index']);
 Route::get('/habilitations/{id}', [HabilitationController::class, 'show']);
-Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
-Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
-Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
-Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
-Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
+
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/seminar/ongoing', [SeminarController::class, 'ongoingSeminars']);
 Route::get('/seminar/completed', [SeminarController::class, 'completedSeminars']);
@@ -66,6 +64,13 @@ Route::get('/brevets/acceptes', [Brevetcontroller::class, 'getBrevetsAcceptes'])
 Route::get('/reportes/acceptes', [Reportcontroller::class, 'getReportsAcceptes']);
 Route::get('/these/acceptes', [Thesecontroller::class, 'getAcceptedTheses']);
 Route::get('/habilitation/acceptes', [Habilitationcontroller::class, 'getAcceptedHabilitations']);
+Route::get('/habilitations/user-or-contributor/{id_user}', [HabilitationController::class, 'getHabilitationByUserOrContributor']);
+Route::get('/rapports/user-or-contributor/{id_user}', [ReportController::class, 'getReportByUserOrContributor']);
+Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
+Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, 'getBrevetByUserOrContributor']);
+Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
+Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
 
 // Routes accessibles avec authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -86,10 +91,18 @@ Route::middleware('auth:sanctum')->group(function () {
     //test 
     Route::get('/members/{id}', [MemberController::class, 'show']);
     Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+    //users 
+    //message
+    Route::post('/messages', [MessageController::class, 'sendMessage']);
+    Route::get('/messages/received', [MessageController::class, 'getReceivedMessages']);
+    Route::get('/messages/sent', [MessageController::class, 'getSentMessages']);
+    Route::put('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+    Route::put('/messages/{id}/Notread', [MessageController::class, 'markAsNotRead']);
+    Route::get('/messages/{id}', [MessageController::class, 'show']);
+
 
 
     //revue
-    Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
     Route::get('/revueUser/{id}', [RevueController::class, 'showUser']);
     Route::put('/revueUser/{id}', [RevueController::class, 'updateRevues']);
     Route::post('/revueUser', [RevueController::class, 'storeUser']);
@@ -97,7 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkDOIExists', [RevueController::class, 'checkDOIExists']);
 
     //ouvrages 
-    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+
     Route::get('/ouvrageUser/{id}', [OuvrageController::class, 'showUser']);
     Route::put('/ouvrageUser/{id}', [OuvrageController::class, 'updateOuvrage']);
     Route::post('/ouvragesUser', [OuvrageController::class, 'storeUser']);
@@ -158,6 +171,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Member routes
     Route::post('/members', [MemberController::class, 'store']);
+    Route::put('/member/{id}', [MemberController::class, 'updateMember'])->name('member.update');
     Route::put('/members/{id}', [MemberController::class, 'update']);
     Route::delete('/members/{id}', [MemberController::class, 'destroy']);
 
@@ -193,6 +207,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/revues', [RevueController::class, 'getRevuesEnAttente']);
     Route::post('/revues/accept/{id}', [RevueController::class, 'acceptRevue']);
     Route::post('/revues/reject/{id}', [RevueController::class, 'rejectRevue']);
+    Route::get('/revues/{id}', [RevueController::class, 'show']);
+    Route::get('/user/profil', [UserController::class, 'profil']);
+
+
+
+
 
 
     // Brevet routes
@@ -272,6 +292,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/conferences/{id}', [ConferenceController::class, 'update']);
 
 
+
     //Axe
     Route::post('/axes', [AxeController::class, 'store']);
     Route::get('/axes/{id}', [AxeController::class, 'show']);
@@ -279,6 +300,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/axes/{id}', [AxeController::class, 'destroy']);
     // Admin dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+    Route::post('/auth/check', [UserController::class, 'checkCredentials']);
 
     // Authentication status
     Route::get('/checkingAuthenticated', function (Request $request) {
