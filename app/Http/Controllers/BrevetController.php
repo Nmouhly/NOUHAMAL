@@ -200,7 +200,7 @@ class BrevetController extends Controller
     public function checkDOIExists(Request $request)
     {
         $doi = $request->input('doi');
-        $exists = Brevet::where('DOI', $doi)->exists(); // Revue est le modèle pour votre table des revues
+        $exists = Brevet::where('doi', $doi)->exists(); // Revue est le modèle pour votre table des revues
 
         return response()->json(['exists' => $exists]);
     }

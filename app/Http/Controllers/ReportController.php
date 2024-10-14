@@ -49,13 +49,10 @@ class ReportController extends Controller
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-<<<<<<< HEAD
             'DOI' => 'required|string|max:255',
             'id_user' => 'string|max:255', // Check if this column is required
-=======
-           'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', 
->>>>>>> 95211d42b53dfd11b9f5f3878a43816dffdb311a
+            'DOI' => 'required|string|max:255',
+            'id_user' => 'string|max:255',
         ]);
 
         // Add the default status here

@@ -71,6 +71,7 @@ Route::get('/brevets/user-or-contributor/{id_user}', [BrevetController::class, '
 Route::get('/theses/user-or-contributor/{id_user}', [TheseController::class, 'getTheseByUserOrContributor']);
 Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
 Route::get('/revues/user-or-contributor/{id_user}', [RevueController::class, 'getRevuesByUserOrContributor']);
+Route::get('/members/{id}', [MemberController::class, 'show']);
 
 // Routes accessibles avec authentification
 Route::middleware('auth:sanctum')->group(function () {
@@ -89,8 +90,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //test 
-    Route::get('/members/{id}', [MemberController::class, 'show']);
-    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
     //users 
     //message
     Route::post('/messages', [MessageController::class, 'sendMessage']);
@@ -107,7 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/revueUser/{id}', [RevueController::class, 'updateRevues']);
     Route::post('/revueUser', [RevueController::class, 'storeUser']);
     Route::delete('/revuesUser/{id}', [RevueController::class, 'destroy']);
-    Route::post('/checkDOIExists', [RevueController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsRevue', [RevueController::class, 'checkDOIExists']);
 
     //ouvrages 
 
@@ -115,27 +114,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/ouvrageUser/{id}', [OuvrageController::class, 'updateOuvrage']);
     Route::post('/ouvragesUser', [OuvrageController::class, 'storeUser']);
     Route::delete('/ouvragesUser/{id}', [OuvrageController::class, 'destroy']);
-    Route::post('/checkDOIExists', [OuvrageController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsOuvrage', [OuvrageController::class, 'checkDOIExists']);
 
     //brevets 
     Route::get('/brevetUser/{id}', [BrevetController::class, 'showUser']);
     Route::put('/brevetUser/{id}', [BrevetController::class, 'updateBrevet']);
     Route::delete('/brevetUser/{id}', [BrevetController::class, 'destroy']);
-    Route::post('/checkDOIExists', [OuvrageController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsBrevet', [BrevetController::class, 'checkDOIExists']);
     Route::post('/brevetUser', [BrevetController::class, 'storeUser']);
 
     //rapport
     Route::get('/rapportUser/{id}', [ReportController::class, 'showUser']);
     Route::put('/rapportUser/{id}', [ReportController::class, 'updateRapport']);
     Route::delete('/rapportUser/{id}', [ReportController::class, 'destroy']);
-    Route::post('/checkDOIExists', [ReportController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsRapport', [ReportController::class, 'checkDOIExists']);
     Route::post('/rapportUser', [ReportController::class, 'store']);
 
 
 
 
     //thèses et doctorat 
-    Route::post('/checkDOIExists', [TheseController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsThèse', [TheseController::class, 'checkDOIExists']);
     Route::delete('/thesesUser/{id}', [TheseController::class, 'destroy']);
     Route::post('/thesesUser', [TheseController::class, 'store']);
     Route::get('/thesesUser/{id}', [TheseController::class, 'showUser']);
@@ -146,7 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/habilitationsUser/{id}', [HabilitationController::class, 'destroy']);
     Route::get('/habilitationsUser/{id}', [HabilitationController::class, 'showUser']);
     Route::put('/habilitationsUser/{id}', [HabilitationController::class, 'updateHabilitation']);
-    Route::post('/checkDOIExists', [HabilitationController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistsHabilitation', [HabilitationController::class, 'checkDOIExists']);
 
 
 

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddRoleToUsersTable extends Migration
+class AddBioToUsersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,19 +14,14 @@ class AddRoleToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('role')->default(0)->after('remember_token'); // Ajouté pour le champ role
+            $table->text('bio')->nullable();  // Ajoute une colonne 'bio' de type texte et optionnelle
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
+            $table->dropColumn('bio');  // Supprime la colonne 'bio' en cas de rollback
         });
     }
 }

@@ -46,81 +46,81 @@ class UserController extends Controller
     //     ], 201);
     // }
     public function store(Request $request)
-{
-    // Validation des données de la requête
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:8',
-        'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
-        'bio' => 'nullable|string|max:500', // Validation du bio, non obligatoire
-    ]);
-
-    // Retourner une réponse en cas d'erreurs de validation
-    if ($validator->fails()) {
-        return response()->json([
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    // Création de l'utilisateur
-    $user = User::create([
-        'name' => $request->input('name'),
-        'email' => $request->input('email'),
-        'password' => Hash::make($request->input('password')), // Hachage du mot de passe
-        'role' => (int) $request->input('role'), // Conversion en entier
-        'bio' => $request->input('bio', ''), // Valeur par défaut vide si non fourni
-    ]);
-
-    // if($user){$user->notify(new ActionNotification());}
-    // Retourner une réponse de succès
-    return response()->json([
-        'message' => 'Utilisateur créé avec succès.',
-        'user' => $user,
-    ], 201);
-}
-
-
-public function auth(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user || !Hash::check($request->password, $user->password)) {
-        return response()->json([
-            'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
-        ], 401);
-    }
-     // Vérifier si c'est la première connexion
-     if ($user->first_login) {
-        // Envoyer l'e-mail de bienvenue
-       
-        Mail::to($user->email)->send(new WelcomeEMail($user->name));
-
-        // Mettre à jour le champ first_login
-        $user->first_login = false;
-        $user->save();
-    }
-    
-
-    if ($user->role === 1) {
-        return response()->json([
-            'user' => $user,
-            'currentToken' => $user->createToken('new_user')->plainTextToken,
-            'message' => 'Connexion réussie. Vous êtes un admin.',
+    {
+        // Validation des données de la requête
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
+            'bio' => 'nullable|string|max:500', // Validation du bio, non obligatoire
         ]);
-    } else {
-        return response()->json([
-            'user' => $user,
-            'currentToken' => $user->createToken('new_user')->plainTextToken,
-            'message' => 'Connexion réussie. Vous êtes un utilisateur.',
+
+        // Retourner une réponse en cas d'erreurs de validation
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Création de l'utilisateur
+        $user = User::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => Hash::make($request->input('password')), // Hachage du mot de passe
+            'role' => (int) $request->input('role'), // Conversion en entier
+            'bio' => $request->input('bio', ''), // Valeur par défaut vide si non fourni
         ]);
+
+        // if($user){$user->notify(new ActionNotification());}
+        // Retourner une réponse de succès
+        return response()->json([
+            'message' => 'Utilisateur créé avec succès.',
+            'user' => $user,
+        ], 201);
     }
-}
+
+
+    public function auth(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'error' => 'Ces identifiants ne correspondent à aucun de nos enregistrements.'
+            ], 401);
+        }
+        // Vérifier si c'est la première connexion
+        if ($user->first_login) {
+            // Envoyer l'e-mail de bienvenue
+
+            Mail::to($user->email)->send(new WelcomeEMail($user->name));
+
+            // Mettre à jour le champ first_login
+            $user->first_login = false;
+            $user->save();
+        }
+
+
+        if ($user->role === 1) {
+            return response()->json([
+                'user' => $user,
+                'currentToken' => $user->createToken('new_user')->plainTextToken,
+                'message' => 'Connexion réussie. Vous êtes un admin.',
+            ]);
+        } else {
+            return response()->json([
+                'user' => $user,
+                'currentToken' => $user->createToken('new_user')->plainTextToken,
+                'message' => 'Connexion réussie. Vous êtes un utilisateur.',
+            ]);
+        }
+    }
 
 
     public function logout(Request $request)
@@ -157,10 +157,10 @@ public function auth(Request $request)
         $request->validate([
             'email' => 'required|email'
         ]);
-    
+
         // Rechercher l'utilisateur par email
         $user = User::where('email', $request->input('email'))->first();
-    
+
         // Vérifier si l'utilisateur existe
         if (!$user) {
             return response()->json([
@@ -168,19 +168,19 @@ public function auth(Request $request)
                 'message' => 'Utilisateur non trouvé.'
             ]);
         }
-    
+
         // Retourner l'ID de l'utilisateur
         return response()->json([
             'user_id' => $user->id
         ]);
     }
-    
+
 
     public function checkCredentials(Request $request)
     {
         // Validation des entrées
         $request->validate([
-            'email' => 'required|email',
+            // 'email' => 'required|email',
             'password' => 'required',
         ]);
 
@@ -188,7 +188,8 @@ public function auth(Request $request)
         $user = Auth::user();
 
         // Vérifier si l'email et le mot de passe correspondent
-        if ($user && $user->email === $request->email && Hash::check($request->password, $user->password)) {
+        // if ($user && $user->email === $request->email && Hash::check($request->password, $user->password)) {
+        if (Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Credentials are valid'], 200);
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -215,32 +216,32 @@ public function auth(Request $request)
         }
     }
     public function updateUser(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-        'password' => 'sometimes|required|string|min:8',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'password' => 'sometimes|required|string|min:8',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé'], 404);
+        }
+
+        $user->update([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => $request->has('password') ? Hash::make($request->password) : $user->password,
+
+        ]);
+
+        return response()->json(['message' => 'Utilisateur mis à jour avec succès', 'user' => $user], 200);
     }
-
-    $user = User::find($id);
-
-    if (!$user) {
-        return response()->json(['error' => 'Utilisateur non trouvé'], 404);
-    }
-
-    $user->update([
-        'name' => $request->input('name'),
-        'email' => $request->input('email'),
-        'password' => $request->has('password') ? Hash::make($request->password) : $user->password,
-
-    ]);
-
-    return response()->json(['message' => 'Utilisateur mis à jour avec succès', 'user' => $user], 200);
-}
 
 
     public function update(Request $request, $id)
@@ -271,30 +272,30 @@ public function auth(Request $request)
 
         return response()->json($user);
     }
-   
+
     public function destroy($id)
-{
-    $user = User::find($id);
-    if ($user) {
-        // Find the associated Member with the same email
-        $member = Member::where('email', $user->email)->first();
+    {
+        $user = User::find($id);
+        if ($user) {
+            // Find the associated Member with the same email
+            $member = Member::where('email', $user->email)->first();
 
-        if ($member) {
-            // Update the Member's status to 'ancien'
-            $member->update(['statut' => 'ancien']);
+            if ($member) {
+                // Update the Member's status to 'ancien'
+                $member->update(['statut' => 'ancien']);
+            }
+
+            // Delete the user
+            $user->delete();
+
+            return response()->json([
+                'message' => 'User and associated member status updated successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'error' => 'User not found.'
+            ], 404);
         }
-
-        // Delete the user
-        $user->delete();
-
-        return response()->json([
-            'message' => 'User and associated member status updated successfully.'
-        ]);
-    } else {
-        return response()->json([
-            'error' => 'User not found.'
-        ], 404);
     }
-}
 
 }

@@ -13,7 +13,7 @@ class AddStatusToReportsTable extends Migration
      */
     public function up()
     {
-        Schema::table('reports', function (Blueprint $table) {
+        Schema::table('rapports', function (Blueprint $table) {
             // Ajoute une colonne 'status' de type enum avec les options 'en attente', 'approuvé', 'rejeté'
             $table->enum('status', ['en attente', 'approuvé', 'rejeté'])->default('en attente');
         });
