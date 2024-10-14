@@ -3,58 +3,121 @@
 namespace App\Http\Controllers;
 use App\Brevet;
 use Illuminate\Http\Request;
+use App\User;
 
 class BrevetController extends Controller
 {
 
 
     // Ajouter un nouveau brevet
+    // public function storeUser(Request $request)
+    // {
+    //     // Valider les données du formulaire
+    //     $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'doi' => 'required|string|max:255',
+    //         'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+    //     ]);
+
+    //     // Créer un nouvel ouvrage avec les données validées
+    //     $brevets = Brevet::create([
+    //         'title' => $request->title,
+    //         'author' => $request->author,
+    //         'doi' => $request->doi,
+    //         'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+    //         'status' => 'en attente', // Statut par défaut
+
+    //     ]);
+
+    //     // Retourner une réponse JSON avec un message de succès
+    //     return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
+    // }
     public function storeUser(Request $request)
-    {
-        // Valider les données du formulaire
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'doi' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
-        ]);
+{
+    // Valider les données du formulaire
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'doi' => 'required|string|max:255',
+        'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
+    ]);
 
-        // Créer un nouvel ouvrage avec les données validées
-        $brevets = Brevet::create([
-            'title' => $request->title,
-            'author' => $request->author,
-            'doi' => $request->doi,
-            'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
-            'status' => 'en attente', // Statut par défaut
+    // Trouver l'utilisateur par son id
+    $user = User::find($request->id_user);
 
-        ]);
+    // Vérifier si l'utilisateur a l'Etat "approuvé"
+    $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
 
-        // Retourner une réponse JSON avec un message de succès
-        return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
-    }
+    // Créer un nouveau brevet avec le statut déterminé
+    $brevets = Brevet::create([
+        'title' => $request->title,
+        'author' => $request->author,
+        'doi' => $request->doi,
+        'id_user' => $request->id_user,
+        'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
+    ]);
+
+    // Retourner une réponse JSON avec un message de succès
+    return response()->json(['message' => 'Brevet soumis avec succès!', 'brevet' => $brevets], 201);
+}
+
+    // public function store(Request $request)
+    // {
+    //     // Valider les données du formulaire
+    //     $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'doi' => 'required|string|max:255',
+    //         'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+    //     ]);
+
+    //     // Créer un nouvel ouvrage avec les données validées
+    //     $brevets = Brevet::create([
+    //         'title' => $request->title,
+    //         'author' => $request->author,
+    //         'doi' => $request->doi,
+    //         'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
+    //         'status' => 'approuvé',
+    //     ]);
+
+    //     // Retourner une réponse JSON avec un message de succès
+    //     return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
+    // }
     public function store(Request $request)
     {
         // Valider les données du formulaire
-        $request->validate([
+        $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'doi' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+            'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
         ]);
-
-        // Créer un nouvel ouvrage avec les données validées
-        $brevets = Brevet::create([
-            'title' => $request->title,
-            'author' => $request->author,
-            'doi' => $request->doi,
-            'id_user' => $request->id_user, // Ajoutez cette ligne pour inclure id_user
-            'status' => 'approuvé',
-        ]);
-
-        // Retourner une réponse JSON avec un message de succès
-        return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
+    
+        try {
+            // Trouver l'utilisateur par son id
+            $user = User::find($validatedData['id_user']);
+    
+            // Vérifier si l'utilisateur a l'Etat "approuvé"
+            $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
+    
+            // Créer un nouveau brevet avec le statut déterminé
+            $brevets = Brevet::create([
+                'title' => $validatedData['title'],
+                'author' => $validatedData['author'],
+                'doi' => $validatedData['doi'],
+                'id_user' => $validatedData['id_user'],
+                'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
+            ]);
+    
+            // Retourner une réponse JSON avec un message de succès
+            return response()->json(['message' => 'Brevet créé avec succès!', 'brevet' => $brevets], 201);
+        } catch (\Exception $e) {
+            // Gérer les erreurs et retourner une réponse JSON
+            return response()->json(['error' => 'Erreur lors de la création du brevet'], 500);
+        }
     }
-
+    
 
     // Afficher un brevet spécifique
     public function show($id)

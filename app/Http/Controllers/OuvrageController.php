@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Ouvrage;
+use App\User;
 use Illuminate\Http\Request;
 
 class OuvrageController extends Controller
@@ -61,6 +62,29 @@ class OuvrageController extends Controller
         return response()->json(['message' => 'Ouvrage créé avec succès!', 'ouvrage' => $ouvrage], 201);
     }
 
+    // public function storeUser(Request $request)
+    // {
+    //     // Valider les données du formulaire
+    //     $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'DOI' => 'required|string|max:255',
+    //         'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+    //     ]);
+
+    //     // Créer un nouvel ouvrage avec le statut "en attente"
+    //     $ouvrage = Ouvrage::create([
+    //         'title' => $request->title,
+    //         'author' => $request->author,
+    //         'DOI' => $request->DOI,
+    //         'id_user' => $request->id_user,
+    //         'status' => 'en attente', // Statut par défaut
+    //     ]);
+
+    //     // Retourner une réponse JSON avec un message de succès
+    //     return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
+    // }
+
     public function storeUser(Request $request)
     {
         // Valider les données du formulaire
@@ -68,23 +92,28 @@ class OuvrageController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+            'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
         ]);
-
-        // Créer un nouvel ouvrage avec le statut "en attente"
+    
+        // Trouver l'utilisateur par son id
+        $user = User::find($request->id_user);
+    
+        // Vérifier si l'utilisateur a l'Etat "approuvé"
+        $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
+    
+        // Créer un nouvel ouvrage avec le statut déterminé
         $ouvrage = Ouvrage::create([
             'title' => $request->title,
             'author' => $request->author,
             'DOI' => $request->DOI,
             'id_user' => $request->id_user,
-            'status' => 'en attente', // Statut par défaut
+            'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
         ]);
-
+    
         // Retourner une réponse JSON avec un message de succès
         return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
     }
-
-
+    
     public function getOuvragesByUserOrContributor($id_user)
     {
         // Récupérer les ouvrages où id_user est l'utilisateur ou où il est dans une chaîne de IDs (contributeurs)
@@ -212,15 +241,14 @@ class OuvrageController extends Controller
         }
         return response()->json(['message' => 'Ouvrage non trouvé'], 404);
     }
-    public function checkDOIExists(Request $request)
+    public function checkDOIExist(Request $request)
     {
-        $doi = $request->input('doi');
+        $doi = $request->input('DOI');
         $exists = Ouvrage::where('DOI', $doi)->exists(); // Revue est le modèle pour votre table des revues
 
         return response()->json(['exists' => $exists]);
     }
-
-
+   
     public function acceptOuvrage($id)
     {
         $ouvrage = Ouvrage::findOrFail($id);

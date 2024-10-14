@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\These;
+use App\User;
 use Illuminate\Http\Request;
 
 class TheseController extends Controller
@@ -24,35 +25,67 @@ class TheseController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
+    // public function store(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string',
+    //         'doi' => 'nullable|string|max:255',
+    //         'id_user' => 'required|string',
+    //         'lieu' => 'nullable|string|max:255',
+    //         'date' => 'nullable|date',
+
+    //     ]);
+
+    //     try {
+    //         // Utilisation du modèle 'These'
+    //         $these = These::create([
+    //             'title' => $validatedData['title'],
+    //             'author' => $validatedData['author'],
+    //             'doi' => $validatedData['doi'],
+    //             'id_user' => $validatedData['id_user'],
+    //             'lieu' => $validatedData['lieu'],
+    //             'date' => $validatedData['date'],
+    //             'status' => 'en attente', // Statut par défaut
+
+    //         ]);
+
+    //         return response()->json($these, 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Erreur lors de l\'ajout de la thèse'], 500);
+    //     }
+    // }
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        // Valider les données du formulaire
+        $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string',
+            'author' => 'required|string|max:255',
             'doi' => 'nullable|string|max:255',
-            'id_user' => 'required|string',
+            'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
             'lieu' => 'nullable|string|max:255',
             'date' => 'nullable|date',
-
         ]);
-
-        try {
-            // Utilisation du modèle 'These'
-            $these = These::create([
-                'title' => $validatedData['title'],
-                'author' => $validatedData['author'],
-                'doi' => $validatedData['doi'],
-                'id_user' => $validatedData['id_user'],
-                'lieu' => $validatedData['lieu'],
-                'date' => $validatedData['date'],
-                'status' => 'en attente', // Statut par défaut
-
-            ]);
-
-            return response()->json($these, 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Erreur lors de l\'ajout de la thèse'], 500);
-        }
+    
+        // Trouver l'utilisateur par son id
+        $user = User::find($request->id_user);
+    
+        // Vérifier si l'utilisateur a l'Etat "approuvé"
+        $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
+    
+        // Créer une nouvelle thèse avec le statut déterminé
+        $these = These::create([
+            'title' => $request->title,
+            'author' => $request->author,
+            'doi' => $request->doi,
+            'id_user' => $request->id_user,
+            'lieu' => $request->lieu,
+            'date' => $request->date,
+            'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
+        ]);
+    
+        // Retourner une réponse JSON avec un message de succès
+        return response()->json(['message' => 'Thèse soumise pour approbation avec succès!', 'these' => $these], 201);
     }
     public function storeAdmin(Request $request)
     {

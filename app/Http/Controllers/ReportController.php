@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Report;
+use App\User;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -30,27 +31,56 @@ class ReportController extends Controller
         return response()->json(['message' => 'Report non trouvé'], 404);
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string|max:255',
+    //         'DOI' => 'required|string|max:255',
+    //         'id_user' => 'string|max:255', // Vérifiez si cette colonne est requise
+    //         'status' => 'en attente', // Statut par défaut
+
+    //     ]);
+
+    //     $revue = Report::create($validatedData);
+    //     return response()->json($revue, 201);
+    // }
     public function store(Request $request)
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Vérifiez si cette colonne est requise
-            'status' => 'en attente', // Statut par défaut
-
+            'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
         ]);
 
-        $revue = Report::create($validatedData);
-        return response()->json($revue, 201);
+        try {
+            // Trouver l'utilisateur par son id
+            $user = User::find($validatedData['id_user']);
+
+            // Vérifier si l'utilisateur a l'Etat "approuvé"
+            $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
+
+            // Créer le rapport avec le statut déterminé
+            $report = Report::create([
+                'title' => $validatedData['title'],
+                'author' => $validatedData['author'],
+                'DOI' => $validatedData['DOI'],
+                'id_user' => $validatedData['id_user'],
+                'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
+            ]);
+
+            return response()->json($report, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de l\'ajout du rapport'], 500);
+        }
     }
+
     public function storeAdmin(Request $request)
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Check if this column is required
             'DOI' => 'required|string|max:255',
             'id_user' => 'string|max:255',
         ]);

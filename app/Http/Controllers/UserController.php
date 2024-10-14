@@ -54,6 +54,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
             'role' => 'required|integer|in:0,1', // Validation du rôle pour s'assurer qu'il est soit 0 soit 1
             'bio' => 'nullable|string|max:500', // Validation du bio, non obligatoire
+            'Etat' => 'required|string|in:approuve,non approuve',
         ]);
 
         // Retourner une réponse en cas d'erreurs de validation
@@ -70,6 +71,7 @@ class UserController extends Controller
             'password' => Hash::make($request->input('password')), // Hachage du mot de passe
             'role' => (int) $request->input('role'), // Conversion en entier
             'bio' => $request->input('bio', ''), // Valeur par défaut vide si non fourni
+            'Etat' => $request->input('Etat'),
         ]);
 
         // if($user){$user->notify(new ActionNotification());}
@@ -188,8 +190,8 @@ class UserController extends Controller
         $user = Auth::user();
 
         // Vérifier si l'email et le mot de passe correspondent
-        // if ($user && $user->email === $request->email && Hash::check($request->password, $user->password)) {
         if (Hash::check($request->password, $user->password)) {
+            // if ($user && $user->email === $request->email && Hash::check($request->password, $user->password))
             return response()->json(['message' => 'Credentials are valid'], 200);
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -250,7 +252,8 @@ class UserController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
             'password' => 'sometimes|required|string|min:8',
-            'role' => 'sometimes|required|integer|in:0,1'
+            'role' => 'sometimes|required|integer|in:0,1',
+            'Etat' => 'sometimes|required|string|in:approuve,non approuve',
         ]);
 
         if ($validator->fails()) {
@@ -267,7 +270,8 @@ class UserController extends Controller
             'name' => $request->input('name', $user->name),
             'email' => $request->input('email', $user->email),
             'password' => $request->has('password') ? Hash::make($request->password) : $user->password,
-            'role' => $request->input('role', $user->role)
+            'role' => $request->input('role', $user->role),
+            'Etat' => $request->input('Etat', $user->Etat),
         ]);
 
         return response()->json($user);
@@ -297,5 +301,26 @@ class UserController extends Controller
             ], 404);
         }
     }
+    public function updateStatus(Request $request, $id)
+    {
+        // Valider la requête pour s'assurer que l'état est fourni
+        $request->validate([
+            'Etat' => 'required|string|in:approuve,non approuve', // Assurez-vous que ce sont les états valides
+        ]);
+
+        // Trouver l'utilisateur par ID
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+        }
+
+        // Mettre à jour l'état de l'utilisateur
+        $user->Etat = $request->Etat;
+        $user->save();
+
+        return response()->json(['message' => 'État de l\'utilisateur mis à jour avec succès']);
+    }
+
 
 }
