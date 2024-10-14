@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Habilitation;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,34 +23,68 @@ class HabilitationController extends Controller
     }
 
     // Créer une nouvelle habilitation
+    // public function store(Request $request)
+    // {
+    //     $validatedData = $request->validate([
+    //         'title' => 'required|string|max:255',
+    //         'author' => 'required|string',
+    //         'doi' => 'nullable|string|max:255',
+    //         'id_user' => 'required|string',
+    //         'lieu' => 'nullable|string|max:255',
+    //         'date' => 'nullable|date',
+    //     ]);
+
+    //     try {
+    //         $habilitation = Habilitation::create([
+    //             'title' => $validatedData['title'],
+    //             'author' => $validatedData['author'],
+    //             'doi' => $validatedData['doi'],
+    //             'id_user' => $validatedData['id_user'],
+    //             'lieu' => $validatedData['lieu'],
+    //             'date' => $validatedData['date'],
+    //             'status' => 'en attente', // Statut par défaut
+
+    //         ]);
+
+    //         return response()->json($habilitation, 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => 'Erreur lors de l\'ajout habilitation'], 500);
+    //     }
+    // }
+    
     public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string',
-            'doi' => 'nullable|string|max:255',
-            'id_user' => 'required|string',
-            'lieu' => 'nullable|string|max:255',
-            'date' => 'nullable|date',
-        ]);
+{
+    // Valider les données du formulaire
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'doi' => 'required|string|max:255',
+        'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
+        'lieu' => 'nullable|string|max:255',
+        'date' => 'nullable|date',
+    ]);
 
-        try {
-            $habilitation = Habilitation::create([
-                'title' => $validatedData['title'],
-                'author' => $validatedData['author'],
-                'doi' => $validatedData['doi'],
-                'id_user' => $validatedData['id_user'],
-                'lieu' => $validatedData['lieu'],
-                'date' => $validatedData['date'],
-                'status' => 'en attente', // Statut par défaut
+    // Trouver l'utilisateur par son id
+    $user = User::find($request->id_user);
 
-            ]);
+    // Vérifier si l'utilisateur a l'Etat "approuvé"
+    $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
 
-            return response()->json($habilitation, 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Erreur lors de l\'ajout habilitation'], 500);
-        }
-    }
+    // Créer une nouvelle habilitation avec le statut déterminé
+    $habilitation = Habilitation::create([
+        'title' => $request->title,
+        'author' => $request->author,
+        'doi' => $request->doi,
+        'id_user' => $request->id_user,
+        'lieu' => $request->lieu,
+        'date' => $request->date,
+        'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
+    ]);
+
+    // Retourner une réponse JSON avec un message de succès
+    return response()->json(['message' => 'Habilitation soumise pour approbation avec succès!', 'habilitation' => $habilitation], 201);
+}
+
     public function storeAdmin(Request $request)
     {
         $validatedData = $request->validate([

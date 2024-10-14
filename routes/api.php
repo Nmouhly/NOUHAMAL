@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Routes accessibles sans authentification
 Route::post('/get-user-id', [UserController::class, 'getUserIdByEmail']);
+Route::get('/members/{id}', [MemberController::class, 'show']);
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{id}', [NewsController::class, 'show']);
 Route::get('/members', [MemberController::class, 'index']);
@@ -80,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/register', [UserController::class, 'store']);
     Route::get('/users/{id}', [UserController::class, 'show']); // Get specific user
     Route::put('/users/{id}', [UserController::class, 'update']); // Update specific user
+    Route::put('/users/{id}/status', [UserController::class, 'updateStatus']);
+
     Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete specific user
     Route::get('/user', function (Request $request) {
         return [
@@ -89,8 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //test 
-    Route::get('/members/{id}', [MemberController::class, 'show']);
-    Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
+    
+    // Route::get('/ouvrages/user-or-contributor/{id_user}', [OuvrageController::class, 'getOuvragesByUserOrContributor']);
     //users 
     //message
     Route::post('/messages', [MessageController::class, 'sendMessage']);
@@ -192,7 +195,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/ouvrages/{id}', [OuvrageController::class, 'updateOuvrageAdmin']);
     Route::delete('/ouvrages/{id}', [OuvrageController::class, 'destroy']);
     Route::get('/ouvrages/{id}', [OuvrageController::class, 'showUser']);
-    Route::post('/checkDOIExistsAdmin', [OuvrageController::class, 'checkDOIExists']);
+    Route::post('/checkDOIExistAdmin', [OuvrageController::class, 'checkDOIExist']);
     Route::get('/ouvrages', [OuvrageController::class, 'getPublicationsEnAttente']);
     Route::post('/ouvrages/accept/{id}', [OuvrageController::class, 'acceptOuvrage']);
     Route::post('/ouvrages/reject/{id}', [OuvrageController::class, 'rejectOuvrage']);

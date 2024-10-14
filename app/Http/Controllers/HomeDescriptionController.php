@@ -3,15 +3,25 @@
 namespace App\Http\Controllers;
 use App\HomeDescription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class HomeDescriptionController extends Controller
 {
+    // public function index()
+    // {
+    //     // Récupérer toutes les descriptions
+    //     $descriptions= HomeDescription::latest()->first();
+    //     return response()->json($descriptions);
+    // }
     public function index()
-    {
-        // Récupérer toutes les descriptions
-        $descriptions= HomeDescription::latest()->first();
-        return response()->json($descriptions);
-    }
+{
+    $homeDescriptions = Cache::remember('home_descriptions_cache', 60, function () {
+        return HomeDescription::latest()->first(); // Requête pour les descriptions de la page d'accueil
+    });
+
+    return response()->json($homeDescriptions);
+}
+
 
     public function show($id)
     {

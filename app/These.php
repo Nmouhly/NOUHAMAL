@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\User;
 class These extends Model
 {
     protected $table = 'theses';
@@ -19,7 +19,10 @@ class These extends Model
         'status',
 
     ];
-
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
     // Si vous utilisez une clé primaire non incrémentée, vous pouvez définir:
     // protected $keyType = 'string'; // Si id_user est une clé primaire non incrémentée
     // public $incrementing = false; // Si id_user n'est pas auto-incrémenté

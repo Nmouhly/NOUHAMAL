@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\User;
 class Ouvrage extends Model
 {
     protected $table = 'ouvrages';
@@ -16,6 +16,11 @@ class Ouvrage extends Model
 
 
     ];
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
     // public function member()
     // {
     //     return $this->belongsTo(Member::class, 'id_user', 'user_id');

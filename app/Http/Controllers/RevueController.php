@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Revue;
+use App\User;
 class RevueController extends Controller
 {
     public function index()
@@ -59,21 +60,28 @@ class RevueController extends Controller
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
             'DOI' => 'required|string|max:255',
-            'id_user' => 'string|max:255', // Valider que id_user est présent dans la table members
+            'id_user' => 'required|exists:users,id', // Vérifier que l'utilisateur existe
         ]);
-
-        // Créer un nouvel ouvrage avec le statut "en attente"
-        $ouvrage = Revue::create([
+    
+        // Trouver l'utilisateur par son id
+        $user = User::find($request->id_user);
+    
+        // Vérifier si l'utilisateur a l'Etat "approuvé"
+        $status = ($user->Etat === 'approuve') ? 'approuvé' : 'en attente';
+    
+        // Créer une nouvelle revue avec le statut déterminé
+        $revue = Revue::create([
             'title' => $request->title,
             'author' => $request->author,
             'DOI' => $request->DOI,
             'id_user' => $request->id_user,
-            'status' => 'en attente', // Statut par défaut
+            'status' => $status, // Statut défini en fonction de l'Etat de l'utilisateur
         ]);
-
+    
         // Retourner une réponse JSON avec un message de succès
-        return response()->json(['message' => 'Ouvrage soumis pour approbation avec succès!', 'ouvrage' => $ouvrage], 201);
+        return response()->json(['message' => 'Revue soumise pour approbation avec succès!', 'revue' => $revue], 201);
     }
+    
     public function storeAdmin(Request $request)
     {
         // Valider les données du formulaire
